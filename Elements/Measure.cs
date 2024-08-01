@@ -4,7 +4,7 @@ using System.Collections.Generic;
 /// <summary>
 /// An immutable class that represents a measure with a time signature.
 /// </summary>
-public class Measure {
+public class Measure : IElementGroup {
 
     private readonly List<Element> elements;
     private readonly int[] timeSignature;
@@ -57,7 +57,12 @@ public class Measure {
         } else if(beatGrouping == null) {
 
             //If there was no beat grouping given, and it is not a 3n/8 time signature, then just put all the beats into one group.
-            this.beatGrouping = new int[] { timeSignatureTop };
+            this.beatGrouping = new int[timeSignatureTop];
+            for(int i = 0; i < this.beatGrouping.Length; i++) {
+
+                this.beatGrouping[i] = 1;
+
+            }
 
         } else {
 
@@ -92,7 +97,7 @@ public class Measure {
 
             if(i < 0 || i >= elements.Count) {
 
-                throw new ArgumentException($"Measure: Index {i} is out of range for measure of length {GetElementCount()}.");
+                throw new ArgumentException($"Measure: Index {i} is out of range for measure of length {Count}.");
 
             } else {
 
@@ -100,16 +105,11 @@ public class Measure {
 
             }
 
-
         }
 
     }
 
-    public int GetElementCount() {
-
-        return elements.Count;
-
-    }
+    public int Count { get { return elements.Count; } }
 
     public int[] GetTimeSignature() {
 
@@ -140,19 +140,6 @@ public class Measure {
         }
 
         return totalBeats <= timeSignature[0];
-
-    }
-
-    public override string ToString() {
-
-        string str = "";
-        for(int i = 0; i < elements.Count; i++) {
-
-            str += elements[i].ToString() + " ";
-
-        }
-
-        return str;
 
     }
 
@@ -238,7 +225,6 @@ public class Measure {
                     Element[] tupletElements = new Element[tupletElementData.Length];
                     for(int t = 0; t < tupletElementData.Length; t++) {
 
-                        UnityEngine.Debug.Log(tupletElementData[t]);
                         tupletElements[t] = ReadElementTextInput(tupletElementData[t]);
 
                     }
@@ -246,7 +232,6 @@ public class Measure {
                     musicalElements.Add(new Tuplet(numDivisions, tupletElements, timeSignature));
 
                 }
-
 
             }
 

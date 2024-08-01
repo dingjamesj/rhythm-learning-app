@@ -31,19 +31,19 @@ public class GameUIManager : MonoBehaviour {
     [SerializeField] private RectTransform exitLevelPanel;
     [SerializeField] private RectTransform removeGuidesButton;
     [Space]
-    [SerializeField] private Vector3 exitLevelButtonPosition;
-    [SerializeField] private Vector3 musicNotationPanelPosition;
-    [SerializeField] private Vector3 beatCounterPanelPosition;
-    [SerializeField] private Vector3 showGuideButtonPosition;
-    [SerializeField] private Vector3 guidePanelPosition;
+    [SerializeField] private Vector3 exitLevelButtonPosition = new(48, -50, 0);
+    [SerializeField] private Vector3 musicNotationPanelPosition = new(-115, -270, 0);
+    [SerializeField] private Vector3 beatCounterPanelPosition = new(0, 10, 0);
+    [SerializeField] private Vector3 showGuideButtonPosition = new(-124.5f, 63, 0);
+    [SerializeField] private Vector3 guidePanelPosition = new(-124.5f, 55, 0);
     [Space]
-    [SerializeField] private float counterTransformSpacing;
-    [SerializeField] private float counterTransformGroupSpacing;
-    [SerializeField] private float counterTransformRowSpacing;
-    [SerializeField] private Color defaultBeatCounterColor;
-    [SerializeField] private Color highlightedBeatCounterColor;
-    [SerializeField] private float maximumMetronomeAngle;
-    [SerializeField] private float removeGuidesButtonSeparation;
+    [SerializeField] private float counterTransformSpacing = 0.15f;
+    [SerializeField] private float counterTransformGroupSpacing = 0.5f;
+    [SerializeField] private float counterTransformRowSpacing = 0.25f;
+    [SerializeField] private Color defaultBeatCounterColor = new(0.7490196f, 0.7607843f, 0.9960784f, 1);
+    [SerializeField] private Color highlightedBeatCounterColor = new(1, 0.6509804f, 0.1882353f, 1);
+    [SerializeField] private float maximumMetronomeAngle = 60;
+    [SerializeField] private float removeGuidesButtonSeparation = 3.5f;
 
     [Space]
     [Space]
@@ -53,21 +53,21 @@ public class GameUIManager : MonoBehaviour {
     [SerializeField] private RectTransform guideMusicNotationContainer;
     [SerializeField] private RectTransform tapIndicatorContainer;
     [Space]
-    [SerializeField] private float maxNodeSeparationPerBeat;
-    [SerializeField] private float minNodeSeparationPerBeat;
-    [SerializeField] private float tapTimeLenienceInBeats; //The fact that lenience is in beats and not seconds makes it depend on the tempo
-    [SerializeField] private float connectorBeamHeightAsFractionOfNodeDiameter;
-    [SerializeField] private float guideRowSeparation;
-    [SerializeField] private float guideMusicNotationHoverDistance;
-    [SerializeField] private float guideMusicNotationSize;
-    [SerializeField] private float tapIndicatorYSeparation;
-    [SerializeField] private float tapIndicatorSize;
-    [SerializeField] private Color unreachedGuideColor;
-    [SerializeField] private Color reachedGuideColor;
-    [SerializeField] private Color unreachedGuideMusicNotationColor;
-    [SerializeField] private Color reachedGuideMusicNotationColor;
-    [SerializeField] private Color correctTapIndicatorColor;
-    [SerializeField] private Color incorrectTapIndicatorColor;
+    [SerializeField] private float maxNodeSeparationPerBeat = 150;
+    [SerializeField] private float minNodeSeparationPerBeat = 80;
+    [SerializeField] private float tapTimeLenienceInBeats = 0.1f; //The fact that lenience is in beats and not seconds makes it depend on the tempo
+    [SerializeField] private float connectorBeamHeightAsFractionOfNodeDiameter = 0.3f;
+    [SerializeField] private float guideRowSeparation = 45;
+    [SerializeField] private float guideMusicNotationHoverDistance = 8;
+    [SerializeField] private float guideMusicNotationSize = 0.5f;
+    [SerializeField] private float tapIndicatorYSeparation = 2;
+    [SerializeField] private float tapIndicatorSize = 0.75f;
+    [SerializeField] private Color unreachedGuideColor = new(0.2235294f, 0.2588235f, 1, 1);
+    [SerializeField] private Color reachedGuideColor = new(1, 0.6509804f, 0.1882353f, 1);
+    [SerializeField] private Color unreachedGuideMusicNotationColor = new(0, 0.03529412f, 0.7490196f, 1);
+    [SerializeField] private Color reachedGuideMusicNotationColor = new(0.7450981f, 0.427451f, 0, 1);
+    [SerializeField] private Color correctTapIndicatorColor = new(0.2235294f, 0.4980392f, 1, 1);
+    [SerializeField] private Color incorrectTapIndicatorColor = new(1, 0.3176471f, 0.2901961f, 1);
     [SerializeField] private Material guideMaterial;
 
     [Space]
@@ -82,8 +82,8 @@ public class GameUIManager : MonoBehaviour {
     [SerializeField] private RectTransform guidedResultsInfoContainer;
     [SerializeField] private RectTransform guidelessResultsInfoContainer;
     [Space]
-    [SerializeField] private float resultsPanelShowingDelay;
-    [SerializeField] private Color highlightedTextColor;
+    [SerializeField] private float resultsPanelShowingDelay = 1.35f;
+    [SerializeField] private Color highlightedTextColor = new(1, 0.6509804f, 0.1882353f, 1);
 
 
     private GeneralUIManager generalUIManager;
@@ -735,34 +735,38 @@ public class GameUIManager : MonoBehaviour {
     /// <param name="timeSignature"></param>
     /// <param name="parent"></param>
     /// <param name="beatGrouping">(optional) How beats should be grouped. <br></br>For example, in 6/8, beats are commonly grouped as 3-3, while in 12/8 it is 3-3-3-3, <br></br>and in 7/8 it can be 2-2-3, 2-3-2, or 3-2-2.</param>
-    private void CreateBeatCounters(int[] timeSignature, RectTransform parent, int[] beatGrouping = null) {
+    private void CreateBeatCounters(int[] timeSignature, RectTransform parent, int[] beatGrouping) {
 
         //Note: the time signatures 3/4 and 3/8 should have the same beat counters, and so should 7/4 and 7/8, and so on.
         //This is because we want to emphasize that time signatures sharing the same beat count are essentially the same
 
-        int numBeats = timeSignature[0];
+        //Calculate the counter grouping (DIFFERENT THAN THE BEAT GROUPING).
+        int[] counterGrouping;
+        bool actuallyHasGroups = false;
+        for(int i = 0; i < beatGrouping.Length; i++) {
 
-        if(beatGrouping == null && timeSignature[0] % 3 == 0 && timeSignature[1] == 8) {
+            if(beatGrouping[i] != 1) {
 
-            //If there was no beat grouping given, and the time signature can be expressed as 3n/8, then divide the beats into groups of 3
-            beatGrouping = new int[numBeats / 3];
-            for(int i = 0; i < beatGrouping.Length; i++) {
-
-                beatGrouping[i] = 3;
+                actuallyHasGroups = true;
+                break;
 
             }
 
-        } else if(beatGrouping == null) {
+        }
+        if(actuallyHasGroups) {
 
-            //If there was no beat grouping given, and it is not a 3n/8 time signature, then just put all the beats into one group
-            beatGrouping = new int[] { numBeats };
+            counterGrouping = beatGrouping;
+
+        } else {
+
+            counterGrouping = new int[] { beatGrouping.Length };
 
         }
 
         //We will use the row with the most beat counters as the standard for the width of beat counters
-        FindLargestRowInBeatGrouping(beatGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow);
+        FindLargestRowInBeatCounterGrouping(counterGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow);
 
-        float counterTransformWidth = (parent.rect.width) / (maxNumTransformsPerRow + counterTransformSpacing * (maxNumTransformsPerRow - numGroupsInMaxRow) + counterTransformGroupSpacing * (numGroupsInMaxRow - 1));
+        float counterTransformWidth = parent.rect.width / (maxNumTransformsPerRow + counterTransformSpacing * (maxNumTransformsPerRow - numGroupsInMaxRow) + counterTransformGroupSpacing * (numGroupsInMaxRow - 1));
         float counterTransformSpacingWidth = counterTransformWidth * counterTransformSpacing;
         float counterTransformGroupSpacingWidth = counterTransformWidth * counterTransformGroupSpacing;
         float counterTransformRowSpacingWidth = counterTransformWidth * counterTransformRowSpacing;
@@ -771,11 +775,11 @@ public class GameUIManager : MonoBehaviour {
         float xPosition = -parent.rect.width / 2f + counterTransformWidth / 2f;
         float yPosition = parent.rect.height / 2f - beatCounterPrefab.GetComponent<RectTransform>().rect.height / 2f;
         int numCounterTransformsInRow = 0;
-        for(int group = 0; group < beatGrouping.Length; group++) {
+        for(int group = 0; group < counterGrouping.Length; group++) {
 
-            numCounterTransformsInRow += beatGrouping[group];
+            numCounterTransformsInRow += counterGrouping[group];
 
-            for(int i = 0; i < beatGrouping[group]; i++) {
+            for(int i = 0; i < counterGrouping[group]; i++) {
 
                 RectTransform counterTransform = Instantiate(beatCounterPrefab, parent).GetComponent<RectTransform>();
                 counterTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, counterTransformWidth);
@@ -789,7 +793,7 @@ public class GameUIManager : MonoBehaviour {
             xPosition -= counterTransformSpacingWidth;
             xPosition += counterTransformGroupSpacingWidth;
 
-            if(group < beatGrouping.Length - 1 && numCounterTransformsInRow + beatGrouping[group + 1] > 8) {
+            if(group < counterGrouping.Length - 1 && numCounterTransformsInRow + counterGrouping[group + 1] > 8) {
 
                 yPosition -= beatCounterPrefab.GetComponent<RectTransform>().rect.height + counterTransformRowSpacingWidth;
                 xPosition = -parent.rect.width / 2f + counterTransformWidth / 2f;
@@ -1157,18 +1161,18 @@ public class GameUIManager : MonoBehaviour {
     }
 
     //NOTE TO SELF: THIS METHOD BELOW IS FOR THE METRONOME BEAT COUNTERS, *not* THE NODE GUIDES.
-    private void FindLargestRowInBeatGrouping(int[] beatGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow) {
+    private void FindLargestRowInBeatCounterGrouping(int[] counterGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow) {
 
         //Find how many transforms there will be in the first row. This number cannot be greater than 8
         int numTransformsPerRow = 0;
         maxNumTransformsPerRow = -1;
         int numGroupsInRow = 0;
         numGroupsInMaxRow = 0;
-        for(int i = 0; i < beatGrouping.Length; i++) {
+        for(int i = 0; i < counterGrouping.Length; i++) {
 
             numGroupsInRow++;
 
-            if(numTransformsPerRow + beatGrouping[i] > 8) {
+            if(numTransformsPerRow + counterGrouping[i] > 8) {
 
                 if(numTransformsPerRow > maxNumTransformsPerRow) {
 
@@ -1176,12 +1180,12 @@ public class GameUIManager : MonoBehaviour {
                     numGroupsInMaxRow = numGroupsInRow;
 
                 }
-                numTransformsPerRow = beatGrouping[i];
+                numTransformsPerRow = counterGrouping[i];
                 numGroupsInRow = 1;
 
             } else {
 
-                numTransformsPerRow += beatGrouping[i];
+                numTransformsPerRow += counterGrouping[i];
                 if(numTransformsPerRow > maxNumTransformsPerRow) {
 
                     maxNumTransformsPerRow = numTransformsPerRow;
@@ -1200,7 +1204,7 @@ public class GameUIManager : MonoBehaviour {
         List<Element> list = new List<Element>();
         for(int m = 0; m < measures.Length; m++) {
 
-            for(int i = 0; i < measures[m].GetElementCount(); i++) {
+            for(int i = 0; i < measures[m].Count; i++) {
 
                 list.Add(measures[m][i]);
 

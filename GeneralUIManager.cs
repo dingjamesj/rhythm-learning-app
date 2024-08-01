@@ -17,16 +17,16 @@ public class GeneralUIManager : MonoBehaviour {
     [SerializeField] private RectTransform[] difficultyButtons;
     [SerializeField] private RectTransform background;
     [Space]
-    [SerializeField] private float backgroundScrollSpeed = 5f;
-    [SerializeField] private Vector3 titlePanelPosition;
-    [SerializeField] private Vector3 tutorialsButtonPosition;
-    [SerializeField] private Vector3 practiceButtonPosition;
-    [SerializeField] private Vector3 levelTypeHeaderPosition1;
-    [SerializeField] private Vector3[] difficultyButtonPositions;
-    [SerializeField] private Vector3 difficultyHeaderPosition;
-    [SerializeField] private Vector3 difficultyButtonHidingPosition;
-    [SerializeField] private Vector3 levelTypeHeaderPosition2;
-    [SerializeField] private Vector3 statsButtonPosition;
+    [SerializeField] private float backgroundScrollSpeed = 0.3f;
+    [SerializeField] private Vector3 titlePanelPosition = new(-250, 0, 0);
+    [SerializeField] private Vector3 tutorialsButtonPosition = new(242, 75, 0);
+    [SerializeField] private Vector3 practiceButtonPosition = new(242, -75, 0);
+    [SerializeField] private Vector3 levelTypeHeaderPosition1 = new(-320, 164, 0);
+    [SerializeField] private Vector3[] difficultyButtonPositions = new Vector3[] { new(-372.5f, 24, 0), new(-372.5f, -81, 0), new(-372.5f, -186, 0) };
+    [SerializeField] private Vector3 difficultyHeaderPosition = new(-372.5f, 164, 0);
+    [SerializeField] private Vector3 difficultyButtonHidingPosition = new(-365, -316, 0);
+    [SerializeField] private Vector3 levelTypeHeaderPosition2 = new(-27, 164, 0);
+    [SerializeField] private Vector3 statsButtonPosition = new(-105, -41.6f, 0);
 
     [Space]
     [Space]
@@ -35,11 +35,11 @@ public class GeneralUIManager : MonoBehaviour {
     [SerializeField] private RectTransform leftLevelPreviewPanel;
     [SerializeField] private RectTransform rightLevelPreviewPanel;
     [Space]
-    [SerializeField] private Vector3 levelButtonsPosition;
-    [SerializeField] private Color tutorialsLevelPreviewColor;
-    [SerializeField] private Color practiceLevelPreviewColor;
-    [SerializeField] private Color selectedTutorialsLevelButtonColor;
-    [SerializeField] private Color selectedPracticeLevelButtonColor;
+    [SerializeField] private Vector3 levelButtonsPosition = new(0, -87, 0);
+    [SerializeField] private Color tutorialsLevelPreviewColor = new(0.2235294f, 0.2588235f, 1, 1);
+    [SerializeField] private Color practiceLevelPreviewColor = new(0.2156863f, 0, 1, 1);
+    [SerializeField] private Color selectedTutorialsLevelButtonColor = new(1, 0.8431373f, 0.2196078f, 1);
+    [SerializeField] private Color selectedPracticeLevelButtonColor = new(1, 0.6951936f, 0.2196078f, 1);
     [SerializeField] private LevelScriptableObject[] easyLevels;
     [SerializeField] private LevelScriptableObject[] mediumLevels;
     [SerializeField] private LevelScriptableObject[] hardLevels;
@@ -52,7 +52,7 @@ public class GeneralUIManager : MonoBehaviour {
     [Header("Settings/Stats Screens")]
     [SerializeField] private RectTransform settingsPanel;
     [Space]
-    [SerializeField] private float settingsButtonSpinTime = 0.2f;
+    [SerializeField] private float settingsButtonSpinTime = 1/3f;
 
     private enum LevelType {Tutorial, Practice}
     private SheetMusicUIManager sheetMusicUIManager;

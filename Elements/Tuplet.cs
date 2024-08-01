@@ -1,8 +1,9 @@
-﻿
+﻿using System;
+
 /// <summary>
 /// An immutable class that represents a tuplet (triplets, duplets, quintuplets, etc.) <br></br>
 /// </summary>
-public class Tuplet : Element {
+public class Tuplet : Element, IElementGroup {
 
     private readonly Element[] elements;
     private readonly int numDivisions;
@@ -37,19 +38,36 @@ public class Tuplet : Element {
 
     }
 
-    public float GetBeatsForElement(int elementIndex) {
+    public Element this[int i] {
+
+        get {
+
+            if(i < 0 || i >= elements.Length) {
+
+                throw new ArgumentException($"Tuplet: Index {i} is out of range for measure of length {Count}.");
+
+            } else {
+
+                return elements[i];
+
+            }
+
+
+        }
+
+    }
+
+    public int Count { get { return elements.Length; } }
+
+    public float GetRealBeatsForElement(int elementIndex) {
+
+        UnityEngine.Debug.Log($"{numDivisions}-Tuplet, tuplet length of {elements[elementIndex].GetBeats()}, real length of {elements[elementIndex].GetBeats() * tupletToRealBeatsScale}");
 
         return elements[elementIndex].GetBeats() * tupletToRealBeatsScale;
 
     }
 
-    public int GetElementCount() {
-
-        return elements.Length;
-
-    }
-
-    public float GetNumDivisions() {
+    public int GetNumDivisions() {
 
         return numDivisions;
 

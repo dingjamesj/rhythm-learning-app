@@ -21,19 +21,26 @@ public class SheetMusicUIManager : MonoBehaviour {
     [SerializeField] private GameObject tieHalf;
     [SerializeField] private GameObject barline;
     [SerializeField] private GameObject doubleBarline;
-    [SerializeField] private GameObject[] timeSignatureDigitPrefabs;
+    [SerializeField] private GameObject[] numberPrefabs;
 
     [Header("Preferences")]
     [SerializeField] private float noteSeparationFactor = 150;
     [SerializeField] private float betweenMeasuresGapLength = 22.5f;
+    [SerializeField] private float notationRowSpacing = 45;
+    [Space]
     [SerializeField] private float noteStemHeight = 60;
     [SerializeField] private float noteBeamHeight = 13;
     [SerializeField] private float noteBeamSeparation = 3;
-    [SerializeField] private float noteFlagSeparation = 0.55f;
-    [SerializeField] private float notationRowSpacing = 45;
+    [SerializeField] private float noteFlagSeparation = 25;
     [SerializeField] private float dotXDisplacement = 7.5f;
     [SerializeField] private float dotYDisplacement = 10f;
     [SerializeField] private float tieYDisplacementMultiplier = 1.25f;
+    [Space]
+    [SerializeField] private float tupletDivisionNumberSize = 0.5f;
+    [SerializeField] private float tupletDivisionNumberYSeparation = 5f;
+    [SerializeField] private float tupletBracketHeight = 12.5f;
+    [SerializeField] private float tupletBracketNumberHoleGapSize = 12.5f;
+    [SerializeField] private float tupletBracketThickness = 5;
 
     /// <summary>
     /// Music notation size, as a ratio between the desired size to the original sprite size
@@ -56,7 +63,7 @@ public class SheetMusicUIManager : MonoBehaviour {
 
         if(parent == null) {
 
-            Debug.LogWarning("SheetMusicUIManager: A null parent for the music notation was given.");
+            Debug.LogWarning($"{GetType().Name}: A null parent for the music notation was given.");
             parent = transform.GetComponent<RectTransform>();
 
         }
@@ -64,7 +71,7 @@ public class SheetMusicUIManager : MonoBehaviour {
         float notationWrappingWidth = parent.rect.width - musicNotationBoundsInset * 2f;
         if(notationWrappingWidth <= 0) {
 
-            Debug.LogWarning($"SheetMusicUIManager: The music notation bounds inset of {musicNotationBoundsInset} causes a non-positve notation wrapping length of {notationWrappingWidth}.");
+            Debug.LogWarning($"{GetType().Name}: The music notation bounds inset of {musicNotationBoundsInset} causes a non-positve notation wrapping length of {notationWrappingWidth}.");
 
         }
 
@@ -82,7 +89,7 @@ public class SheetMusicUIManager : MonoBehaviour {
             float measureWidth = measureRectTransform.rect.width + betweenMeasuresGapLength * size;
             if(measureWidth >= notationWrappingWidth) { //The width of this measure is larger than the notation wrapping length, so display a warning message to the console
 
-                Debug.LogWarning($"SheetMusicUIManager: The music notation bounds inset of {musicNotationBoundsInset} causes a notation wrapping length of {notationWrappingWidth}, " +
+                Debug.LogWarning($"{GetType().Name}: The music notation bounds inset of {musicNotationBoundsInset} causes a notation wrapping length of {notationWrappingWidth}, " +
                     $"which is less than the width of some measures given the size {size} (measure {i + 1} has a width of {measureWidth}).");
 
             }
@@ -153,9 +160,9 @@ public class SheetMusicUIManager : MonoBehaviour {
         bool canExitLoop = false;
         for(int m = measures.Length - 1; m >= 0; m--) {
 
-            for(int i = measures[m].GetElementCount() - 1; i >= 0; i--) {
+            for(int i = measures[m].Count - 1; i >= 0; i--) {
 
-                if(measures[m][i] is Note && !(i > 0 && Note.IsTie(measures[m][i - 1], measures[m][i])) && !(i == 0 && m > 0 && Note.IsTie(measures[m - 1][measures[m - 1].GetElementCount() - 1], measures[m][i]))) {
+                if(measures[m][i] is Note && !(i > 0 && Note.IsTie(measures[m][i - 1], measures[m][i])) && !(i == 0 && m > 0 && Note.IsTie(measures[m - 1][measures[m - 1].Count - 1], measures[m][i]))) {
 
                     lastAudibleMeasureIndex = m;
                     lastAudibleElementIndex = i;
@@ -184,7 +191,7 @@ public class SheetMusicUIManager : MonoBehaviour {
         for(int m = 0; m <= lastAudibleMeasureIndex; m++) {
 
             //int i will loop from 0 to lastAudibleElementIndex when m is equal to lastAudibleMeasureIndex. Otherwise, i will loop from 0 to the end of the measure.
-            for(int i = 0; i < (m < lastAudibleMeasureIndex ? measures[m].GetElementCount() : lastAudibleElementIndex + 1); i++) {
+            for(int i = 0; i < (m < lastAudibleMeasureIndex ? measures[m].Count : lastAudibleElementIndex + 1); i++) {
 
                 Element element = measures[m][i];
 
@@ -222,10 +229,10 @@ public class SheetMusicUIManager : MonoBehaviour {
         int noteIndex = 0;
         for(int m = 0; m <= lastAudibleMeasureIndex; m++) {
 
-            for(int i = 0; i < (m < lastAudibleMeasureIndex ? measures[m].GetElementCount() : lastAudibleElementIndex + 1); i++) {
+            for(int i = 0; i < (m < lastAudibleMeasureIndex ? measures[m].Count : lastAudibleElementIndex + 1); i++) {
 
                 //If the note and the next note are in a tie, then tie them.
-                if((i < measures[m].GetElementCount() - 1 && Note.IsTie(measures[m][i], measures[m][i + 1])) || (i == measures[m].GetElementCount() - 1 && m < lastAudibleMeasureIndex && Note.IsTie(measures[m][i], measures[m + 1][0]))) {
+                if((i < measures[m].Count - 1 && Note.IsTie(measures[m][i], measures[m][i + 1])) || (i == measures[m].Count - 1 && m < lastAudibleMeasureIndex && Note.IsTie(measures[m][i], measures[m + 1][0]))) {
 
                     //Note that the guide music notation may not encompass all elements in measures[]
                     //because the guide music notation only contains music elements up until the last audible one.
@@ -293,7 +300,7 @@ public class SheetMusicUIManager : MonoBehaviour {
 
             } else {
 
-                Debug.LogWarning($"SheetMusicUIManager: Alignment \"{alignment}\" is not a recognized alignment type.");
+                Debug.LogWarning($"{GetType().Name}: Alignment \"{alignment}\" is not a recognized alignment type.");
                 measureXPosition = -maxNotationRowLength / 2f + measureRectTransforms[r, 0].rect.width / 2f;
 
             }
@@ -350,7 +357,7 @@ public class SheetMusicUIManager : MonoBehaviour {
     /// <exception cref="ArgumentException"></exception>
     private RectTransform CreateMeasureUI(Measure measure, Transform parent) {
 
-        //Create the game object that will contain the measure's music notation
+        //Create the game object that will contain the measure's music notation.
         GameObject measureGO = new GameObject("Unnamed Measure");
         RectTransform measureRectTransform = measureGO.AddComponent<RectTransform>();
         measureRectTransform.SetParent(parent);
@@ -358,11 +365,11 @@ public class SheetMusicUIManager : MonoBehaviour {
         measureRectTransform.localScale = Vector3.one;
 
 
-        //Generate the UI
+        //Generate the UI.
         float currXPosition = 0;
         //We will shorten the note separation factor for higher time signature denominators.
         float adjustedNoteSeparationFactor = noteSeparationFactor * 2 / Mathf.Sqrt(measure.GetTimeSignature()[1]);
-        for(int i = 0; i < measure.GetElementCount(); i++) {
+        for(int i = 0; i < measure.Count; i++) {
 
             Element element = measure[i];
             GameObject elementGO;
@@ -377,7 +384,11 @@ public class SheetMusicUIManager : MonoBehaviour {
 
             } else if(element is Tuplet) {
 
-                elementGO = InstantiateTuplet(element as Tuplet, measureRectTransform);
+                elementGO = InstantiateTuplet(element as Tuplet, measure.GetTimeSignature()[1], measureRectTransform, adjustedNoteSeparationFactor);
+                RectTransform elementRectTransform = elementGO.GetComponent<RectTransform>();
+                elementGO.transform.localPosition = new Vector3(currXPosition, 0) + Vector3.right * (elementRectTransform.rect.width / 2 - elementRectTransform.GetChild(0).GetComponent<RectTransform>().rect.width / 2);
+                currXPosition += elementRectTransform.rect.width - elementRectTransform.GetChild(0).GetComponent<RectTransform>().rect.width / 2;
+                continue;
 
             } else {
 
@@ -390,32 +401,45 @@ public class SheetMusicUIManager : MonoBehaviour {
 
         }
 
-        ApplyFlagsAndBeamsToMeasure(measure, measureRectTransform);
+        ApplyFlagsAndBeamsToElementGroup(measure, measureRectTransform, measure.GetTimeSignature()[1]);
 
-
-        //Make the parent game object perfectly encompass the music notation
+        //Make the parent game object perfectly encompass the music notation.
 
         RectTransform firstElementRectTransform = measureRectTransform.GetChild(0).GetComponent<RectTransform>();
         float measureMinimumX = firstElementRectTransform.localPosition.x - firstElementRectTransform.rect.width / 2f;
-        RectTransform lastElementTransform = measureRectTransform.GetChild(measureRectTransform.childCount - 1).GetComponent<RectTransform>();
-        //The measure bar should be placed closer to the last note if it has a shorter duration (ex: a measure bar is placed closer to a final eighth note than a final quarter note)
-        float spacingAfterLastNote = adjustedNoteSeparationFactor * LogisticCurve(measure[measure.GetElementCount() - 1].GetBeats(), logisticCurveWidth, logisticCurveBottom, logisticCurveXAdjustment) * size;
-        float measureMaximumX = lastElementTransform.localPosition.x + lastElementTransform.rect.width / 2f + spacingAfterLastNote;
-        foreach(Transform elementComponent in measureRectTransform.GetChild(measureRectTransform.childCount - 1)) {
+        float measureMaximumX;
+        if(measure[measure.Count - 1] is not Tuplet) {
 
-            RectTransform elementComponentRectTransform = elementComponent.GetComponent<RectTransform>();
-            float rightExtentOfElement = lastElementTransform.localPosition.x + elementComponentRectTransform.localPosition.x + elementComponentRectTransform.rect.width / 2f;
-            if(rightExtentOfElement > measureMaximumX) {
+            RectTransform lastElementTransform = measureRectTransform.GetChild(measureRectTransform.childCount - 1).GetComponent<RectTransform>();
+            //The measure bar should be placed closer to the last note if it has a shorter duration (ex: a measure bar is placed closer to a final eighth note than a final quarter note)
+            float spacingAfterLastNote = adjustedNoteSeparationFactor * LogisticCurve(measure[measure.Count - 1].GetBeats(), logisticCurveWidth, logisticCurveBottom, logisticCurveXAdjustment) * size - lastElementTransform.rect.width / 2f * size;
+            measureMaximumX = lastElementTransform.localPosition.x + lastElementTransform.rect.width / 2 + spacingAfterLastNote;
+            foreach(Transform elementComponent in measureRectTransform.GetChild(measureRectTransform.childCount - 1)) {
 
-                measureMaximumX = rightExtentOfElement + spacingAfterLastNote;
+                RectTransform elementComponentRectTransform = elementComponent.GetComponent<RectTransform>();
+                float rightExtentOfElement = lastElementTransform.localPosition.x + elementComponentRectTransform.localPosition.x + elementComponentRectTransform.rect.width / 2f + spacingAfterLastNote;
+                if(rightExtentOfElement > measureMaximumX) {
+
+                    measureMaximumX = rightExtentOfElement;
+
+                }
 
             }
 
+        } else {
+
+            RectTransform lastElementTransform = measureRectTransform.GetChild(measureRectTransform.childCount - 1).GetComponent<RectTransform>();
+            measureMaximumX = lastElementTransform.localPosition.x + lastElementTransform.rect.width / 2;
+
         }
 
+        //Redefine the measure container transform's dimensions (this won't automatically keep the element transforms centered).
         measureRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, measureMaximumX - measureMinimumX);
         measureRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size * (noteStemHeight + filledNoteHead.GetComponent<RectTransform>().rect.height / 2f));
-        Vector3 xDisplacementAdjustment = new Vector3(-(measureMaximumX - measureMinimumX) / 2f + measureRectTransform.GetChild(0).GetComponent<RectTransform>().rect.width / 2f, 0, 0);
+
+        //Center the element transforms.
+        RectTransform firstElementTransform = measureRectTransform.GetChild(0).GetComponent<RectTransform>();
+        Vector3 xDisplacementAdjustment = new Vector3(-(measureMaximumX - measureMinimumX) / 2f + firstElementTransform.rect.width / 2f - firstElementTransform.localPosition.x, 0, 0);
         Vector3 yDisplacementAdjustment = new Vector3(0, -measureRectTransform.rect.height / 2f + size * filledNoteHead.GetComponent<RectTransform>().rect.height / 2f, 0);
         for(int i = 0; i < measureRectTransform.childCount; i++) {
 
@@ -539,11 +563,177 @@ public class SheetMusicUIManager : MonoBehaviour {
 
     }
 
+    private GameObject InstantiateTuplet(Tuplet tuplet, int timeSignatureBottom, Transform parent, float noteSeparationFactor, Color? color = null) {
+
+        GameObject tupletGO = new GameObject(tuplet.GetNumDivisions() switch {
+
+            2 => "Duplet",
+            3 => "Triplet",
+            4 => "Quadruplet",
+            5 => "Quintuplet",
+            _ => $"{tuplet.GetNumDivisions()}-tuplet"
+
+        });
+        RectTransform tupletTransform = tupletGO.AddComponent<RectTransform>();
+        tupletTransform.SetParent(parent);
+        tupletTransform.localScale = Vector3.one;
+
+        float currXPosition = 0;
+        for(int i = 0; i < tuplet.Count; i++) {
+
+            Element element = tuplet[i];
+            GameObject elementGO;
+
+            if(element is Rest) {
+
+                elementGO = InstantiateRest(element as Rest, timeSignatureBottom, tupletTransform, color);
+
+            } else if(element is Note) {
+
+                elementGO = InstantiateNoteBody(element as Note, timeSignatureBottom, tupletTransform, color);
+
+            } else if(element is Tuplet) {
+
+                InstantiateTuplet(element as Tuplet, timeSignatureBottom, tupletTransform, noteSeparationFactor, color);
+                continue;
+
+            } else {
+
+                throw new ArgumentException();
+
+            }
+
+            elementGO.transform.localPosition = new Vector3(currXPosition, 0);
+            currXPosition += noteSeparationFactor * LogisticCurve(tuplet[i].GetBeats(), logisticCurveWidth, logisticCurveBottom, logisticCurveXAdjustment) * size;
+
+        }
+
+
+        //Apply beaming and flagging.
+        ApplyFlagsAndBeamsToElementGroup(tuplet, tupletTransform, timeSignatureBottom);
+        bool allNotesWereBeamed = true;
+        for(int i = 0; i < tupletTransform.childCount; i++) {
+
+            bool canBreak = false;
+
+            Transform elementTransform = tupletTransform.GetChild(i);
+            if(elementTransform.childCount == 1) {
+
+                allNotesWereBeamed = false;
+                break;
+
+            }
+
+            for(int e = 0; e < elementTransform.childCount; e++) {
+
+                if(elementTransform.GetChild(e).name != "Note Stem" && elementTransform.GetChild(e).name != "Beam") {
+
+                    allNotesWereBeamed = false;
+                    break;
+
+                }
+
+            }
+
+            if(canBreak) {
+
+                break;
+
+            }
+
+        }
+        print($"allnoteswerebeamed is {allNotesWereBeamed} for {tupletGO.name}");
+
+
+        //Center the element transforms.
+        RectTransform firstElementTransform = tupletTransform.GetChild(0).GetComponent<RectTransform>();
+        float tupletMinX = -firstElementTransform.rect.width / 2;
+        RectTransform lastElementTransform = tupletTransform.GetChild(tupletTransform.childCount - 1).GetComponent<RectTransform>();
+        float spacingAfterLastNote = noteSeparationFactor * LogisticCurve(tuplet[tuplet.Count - 1].GetBeats(), logisticCurveWidth, logisticCurveBottom, logisticCurveXAdjustment) * size - lastElementTransform.rect.width / 2f;
+        float tupletMaxX = lastElementTransform.localPosition.x + lastElementTransform.rect.width / 2 + spacingAfterLastNote;
+        for(int i = 0; i < lastElementTransform.childCount; i++) {
+
+            RectTransform elementComponentRectTransform = lastElementTransform.GetChild(i).GetComponent<RectTransform>();
+            float rightExtentOfElement = lastElementTransform.localPosition.x + elementComponentRectTransform.localPosition.x + elementComponentRectTransform.rect.width / 2f + spacingAfterLastNote;
+            if(rightExtentOfElement > tupletMaxX) {
+
+                tupletMaxX = rightExtentOfElement;
+
+            }
+
+        }
+
+        tupletTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, tupletMaxX - tupletMinX);
+        tupletTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size * (noteStemHeight + filledNoteHead.GetComponent<RectTransform>().rect.height / 2f));
+
+        float xDisplacementAdjustment = -(tupletMaxX - tupletMinX) / 2f + tupletTransform.GetChild(0).GetComponent<RectTransform>().rect.width / 2f;
+        float yDisplacementAdjustment = -tupletTransform.rect.height / 2f + size * filledNoteHead.GetComponent<RectTransform>().rect.height / 2f;
+        for(int i = 0; i < tupletTransform.childCount; i++) {
+
+            Transform elementTransform = tupletTransform.GetChild(i);
+            elementTransform.localPosition += Vector3.right * xDisplacementAdjustment;
+
+            if(tuplet[i] is Note) {
+
+                tupletTransform.GetChild(i).localPosition += Vector3.up * yDisplacementAdjustment;
+
+            }
+
+        }
+
+
+        //Add the tuplet number.
+        RectTransform tupletNumberTransform = Instantiate(numberPrefabs[tuplet.GetNumDivisions()], tupletTransform).GetComponent<RectTransform>();
+        tupletNumberTransform.name = "Division Number";
+        tupletNumberTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, tupletNumberTransform.rect.width * size * tupletDivisionNumberSize);
+        tupletNumberTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, tupletNumberTransform.rect.height * size * tupletDivisionNumberSize);
+        //Add the tuplet bracket if not all notes were beamed.
+        if(!allNotesWereBeamed) {
+
+            //Note: this below is NOT the same as tupletTransform.rect.width
+            float leftTupletVisibleBound = -tupletTransform.rect.width / 2;
+            float rightTupletVisibleBound = tupletMaxX - spacingAfterLastNote + xDisplacementAdjustment;
+            float tupletNumberHeight = tupletTransform.rect.height / 2 + tupletDivisionNumberYSeparation * size + tupletNumberTransform.rect.height / 2;
+            tupletNumberTransform.localPosition = new Vector3((leftTupletVisibleBound + rightTupletVisibleBound) / 2, tupletNumberHeight);
+
+            RectTransform leftBracketHeightTransform = Instantiate(noteStem, tupletTransform).GetComponent<RectTransform>();
+            leftBracketHeightTransform.name = "Left Bracket Height";
+            leftBracketHeightTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, tupletBracketThickness * size);
+            leftBracketHeightTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, tupletBracketHeight * size);
+            RectTransform rightBracketHeightTransform = Instantiate(leftBracketHeightTransform, tupletTransform).GetComponent<RectTransform>();
+            rightBracketHeightTransform.name = "Right Bracket Height";
+
+            RectTransform leftBracketLengthTransform = Instantiate(noteStem, tupletTransform).GetComponent<RectTransform>();
+            leftBracketLengthTransform.name = "Left Bracket Length";
+            leftBracketLengthTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, (rightTupletVisibleBound - leftTupletVisibleBound) / 2 - tupletBracketNumberHoleGapSize * size);
+            leftBracketLengthTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, tupletBracketThickness * size);
+            RectTransform rightBracketLengthTransform = Instantiate(leftBracketLengthTransform, tupletTransform).GetComponent<RectTransform>();
+            rightBracketLengthTransform.name = "Right Bracket Length";
+
+            leftBracketHeightTransform.localPosition = new Vector3(leftTupletVisibleBound + leftBracketHeightTransform.rect.width / 2, tupletNumberHeight - leftBracketHeightTransform.rect.height / 2 + leftBracketLengthTransform.rect.height / 2);
+            rightBracketHeightTransform.localPosition = new Vector3(rightTupletVisibleBound - rightBracketHeightTransform.rect.width / 2, tupletNumberHeight - rightBracketHeightTransform.rect.height / 2 + rightBracketLengthTransform.rect.height * size / 2);
+            leftBracketLengthTransform.localPosition = new Vector3(leftTupletVisibleBound + leftBracketLengthTransform.rect.width / 2, tupletNumberHeight);
+            rightBracketLengthTransform.localPosition = new Vector3(rightTupletVisibleBound - rightBracketLengthTransform.rect.width / 2, tupletNumberHeight);
+
+        } else {
+
+            //If all notes were beamed, then there will be a single beam running across the entire tuplet.
+            //The number goes at the center of this single beam.
+            tupletNumberTransform.localPosition = new Vector3((firstElementTransform.localPosition.x + firstElementTransform.rect.width / 2 - noteStem.GetComponent<RectTransform>().rect.width * size + lastElementTransform.localPosition.x + lastElementTransform.rect.width / 2) / 2, 
+                tupletTransform.rect.height / 2 + tupletDivisionNumberYSeparation * size + tupletNumberTransform.rect.height / 2);
+
+        }
+
+
+        return tupletGO;
+
+    }
+
     private GameObject InstantiateTimeSignature(int[] timeSignature, Transform parent, Color? color = null) {
 
         //Instantiate the top and bottom
-        RectTransform topRectTransform = Instantiate(timeSignatureDigitPrefabs[timeSignature[0]], parent).GetComponent<RectTransform>();
-        RectTransform bottomRectTransform = Instantiate(timeSignatureDigitPrefabs[timeSignature[1]], parent).GetComponent<RectTransform>();
+        RectTransform topRectTransform = Instantiate(numberPrefabs[timeSignature[0]], parent).GetComponent<RectTransform>();
+        RectTransform bottomRectTransform = Instantiate(numberPrefabs[timeSignature[1]], parent).GetComponent<RectTransform>();
 
         //Resize the top and bottom
         topRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, topRectTransform.rect.width * size);
@@ -572,74 +762,62 @@ public class SheetMusicUIManager : MonoBehaviour {
 
     }
 
-    private GameObject InstantiateTuplet(Tuplet tuplet, Transform parent, Color? color = null) {
+    private void ApplyFlagsAndBeamsToElementGroup(IElementGroup elementGroup, Transform elementGroupTransform, int timeSignatureBottom) {
 
-        return null;
-
-    }
-
-    private void ApplyFlagsAndBeamsToMeasure(Measure measure, Transform measureTransform) {
-
-        if(measure.GetElementCount() <= 0) {
+        if(elementGroup.Count <= 0) {
 
             return;
 
         }
 
         float beatCount = 0;
-        int[] beatGrouping = measure.GetBeatGrouping();
-        HashSet<float> strongBeats = new HashSet<float>();
-        if(beatGrouping.Length == 1) {
+        int[] beatGrouping;
+        if(elementGroup is Measure) {
 
-            //If the beat grouping is just one number, then that means that it is a simple meter.
-            //In simple meters, strong beats occur on every integer beat (in 4/4, the beat grouping is {4} and the strong beats are 0, 1, 2, and 3)
-            for(int i = 0; i < beatGrouping[0]; i++) {
-
-                strongBeats.Add(i);
-
-            }
+            beatGrouping = (elementGroup as Measure).GetBeatGrouping();
 
         } else {
 
-            //If the beat grouping is more than one number, then that means it is either compound or odd.
-            strongBeats.Add(0);
-            int cumulativeBeats = beatGrouping[0];
-            for(int i = 1; i < beatGrouping.Length; i++) {
+            beatGrouping = new int[] { -1 };
 
-                strongBeats.Add(cumulativeBeats);
-                cumulativeBeats += beatGrouping[i];
+        }
 
-            }
+        HashSet<float> strongBeats = new HashSet<float> { 0 };
+        int cumulativeBeats = beatGrouping[0];
+        for(int i = 1; i < beatGrouping.Length; i++) {
+
+            strongBeats.Add(cumulativeBeats);
+            cumulativeBeats += beatGrouping[i];
 
         }
 
         float flagXDisplacement = 0; //Stores the x-position shifting caused by placing flags (placing beams do not cause such shifting)
-        for(int i = 0; i < measure.GetElementCount(); i++) {
+        for(int i = 0; i < elementGroup.Count; i++) {
 
-            Element currElement = measure[i];
+            Element currElement = elementGroup[i];
             bool prevElementForceUnbeam = false;
             bool currElementForceUnbeam = currElement is Note && (currElement as Note).IsForceUnbeam();
             bool nextElementForceUnbeam = false;
             int prevNumFlagsNeeded = 0;
-            int currNumFlagsNeeded = CalculateNumFlagsNeeded(measure[i], measure.GetTimeSignature()[1]);
+            int currNumFlagsNeeded = CalculateNumFlagsNeeded(elementGroup[i], timeSignatureBottom);
             int nextNumFlagsNeeded = 0;
             Transform prevElementTransform = null;
-            Transform currElementTransform = measureTransform.GetChild(i);
+            Transform currElementTransform = elementGroupTransform.GetChild(i);
             Transform nextElementTransform = null;
             if(i > 0) {
 
-                Element prevElement = measure[i - 1];
+                Element prevElement = elementGroup[i - 1];
                 prevElementForceUnbeam = prevElement is Note && (prevElement as Note).IsForceUnbeam();
-                prevNumFlagsNeeded = CalculateNumFlagsNeeded(prevElement, measure.GetTimeSignature()[1]);
-                prevElementTransform = measureTransform.GetChild(i - 1);
+                prevNumFlagsNeeded = CalculateNumFlagsNeeded(prevElement, timeSignatureBottom);
+                prevElementTransform = elementGroupTransform.GetChild(i - 1);
 
             }
-            if(i < measure.GetElementCount() - 1) {
+            if(i < elementGroup.Count - 1) {
 
-                Element nextElement = measure[i + 1];
+                Element nextElement = elementGroup[i + 1];
                 nextElementForceUnbeam = nextElement is Note && (nextElement as Note).IsForceUnbeam();
-                nextNumFlagsNeeded = CalculateNumFlagsNeeded(nextElement, measure.GetTimeSignature()[1]);
-                nextElementTransform = measureTransform.GetChild(i + 1);
+                nextNumFlagsNeeded = CalculateNumFlagsNeeded(nextElement, timeSignatureBottom);
+                nextElementTransform = elementGroupTransform.GetChild(i + 1);
 
             }
 
@@ -698,13 +876,6 @@ public class SheetMusicUIManager : MonoBehaviour {
                 flagXDisplacement += flag.GetComponent<RectTransform>().rect.width;
 
             } else {
-
-                /*
-                if(nextElementTransform != null) {
-
-                    print(nextElementTransform.name + " " + nextNumFlagsNeeded);
-
-                }*/
 
                 //Beam backwards
                 if(prevElementTransform != null && prevNumFlagsNeeded != 0) {
@@ -816,7 +987,7 @@ public class SheetMusicUIManager : MonoBehaviour {
             Rect leftNoteHeadRect = leftNoteTransform.GetComponent<RectTransform>().rect;
             GameObject beamGO = Instantiate(noteStem, leftNoteTransform);
             RectTransform beamRectTransform = beamGO.GetComponent<RectTransform>();
-            beamGO.name = $"Beam {i}";
+            beamGO.name = "Beam";
             beamRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, distanceBetweenPositions / 2f);
             beamRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, noteBeamHeight * size);
             beamRectTransform.GetComponent<Image>().color = color ?? Color.black;
@@ -832,7 +1003,7 @@ public class SheetMusicUIManager : MonoBehaviour {
             Rect rightNoteHeadRect = rightNoteTransform.GetComponent<RectTransform>().rect;
             GameObject beamGO = Instantiate(noteStem, rightNoteTransform);
             RectTransform beamRectTransform = beamGO.GetComponent<RectTransform>();
-            beamGO.name = $"Beam {i}";
+            beamGO.name = "Beam";
             beamRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, distanceBetweenPositions / 2f);
             beamRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, noteBeamHeight * size);
             beamRectTransform.GetComponent<Image>().color = color ?? Color.black;
@@ -864,6 +1035,7 @@ public class SheetMusicUIManager : MonoBehaviour {
         for(int i = 0; i < numFlags; i++) {
 
             GameObject flagGO = Instantiate(flag, noteTransform);
+            flagGO.name = "Flag";
             RectTransform flagRectTransform = flagGO.GetComponent<RectTransform>();
             flagRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, flagRectTransform.rect.width * size);
             flagRectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, flagRectTransform.rect.height * size);
