@@ -1,5 +1,4 @@
-﻿
-public interface IElementGroup {
+﻿public interface IElementGroup {
 
     public Element this[int i] { get; }
 

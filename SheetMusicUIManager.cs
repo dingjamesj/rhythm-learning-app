@@ -642,7 +642,6 @@ public class SheetMusicUIManager : MonoBehaviour {
             }
 
         }
-        print($"allnoteswerebeamed is {allNotesWereBeamed} for {tupletGO.name}");
 
 
         //Center the element transforms.

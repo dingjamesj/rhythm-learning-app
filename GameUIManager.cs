@@ -20,30 +20,29 @@ public class GameUIManager : MonoBehaviour {
     [Space]
     [Space]
     [Header("General")]
-    [SerializeField] private RectTransform exitLevelButton;
     [SerializeField] private RectTransform metronomePanel;
     [SerializeField] private RectTransform beatCounterPanel;
     [SerializeField] private RectTransform beatCountersHidingPanel;
     [SerializeField] private RectTransform musicNotationPanel;
     [SerializeField] private RectTransform showGuideButton;
     [SerializeField] private RectTransform metronomePendulum;
-    [SerializeField] private RectTransform playPauseButton;
+    [SerializeField] private RectTransform playStopButton;
     [SerializeField] private RectTransform exitLevelPanel;
     [SerializeField] private RectTransform removeGuidesButton;
     [Space]
-    [SerializeField] private Vector3 exitLevelButtonPosition = new(48, -50, 0);
-    [SerializeField] private Vector3 musicNotationPanelPosition = new(-115, -270, 0);
-    [SerializeField] private Vector3 beatCounterPanelPosition = new(0, 10, 0);
-    [SerializeField] private Vector3 showGuideButtonPosition = new(-124.5f, 63, 0);
-    [SerializeField] private Vector3 guidePanelPosition = new(-124.5f, 55, 0);
+    [SerializeField] private Vector3 metronomePanelPosition = new(0, -400, 0);
+    [SerializeField] private Vector3 musicNotationPanelPosition = new(0, -1254, 0);
+    [SerializeField] private Vector3 beatCounterPanelPosition = new(220, -150, 0);
+    [SerializeField] private Vector3 showGuideButtonPosition = new(0, 235, 0);
+    [SerializeField] private Vector3 guidePanelPosition = new(0, 220, 0);
     [Space]
+    [SerializeField] private float counterTransformHeight = 75;
     [SerializeField] private float counterTransformSpacing = 0.15f;
     [SerializeField] private float counterTransformGroupSpacing = 0.5f;
     [SerializeField] private float counterTransformRowSpacing = 0.25f;
     [SerializeField] private Color defaultBeatCounterColor = new(0.7490196f, 0.7607843f, 0.9960784f, 1);
     [SerializeField] private Color highlightedBeatCounterColor = new(1, 0.6509804f, 0.1882353f, 1);
     [SerializeField] private float maximumMetronomeAngle = 60;
-    [SerializeField] private float removeGuidesButtonSeparation = 3.5f;
 
     [Space]
     [Space]
@@ -53,8 +52,8 @@ public class GameUIManager : MonoBehaviour {
     [SerializeField] private RectTransform guideMusicNotationContainer;
     [SerializeField] private RectTransform tapIndicatorContainer;
     [Space]
-    [SerializeField] private float maxNodeSeparationPerBeat = 150;
-    [SerializeField] private float minNodeSeparationPerBeat = 80;
+    [SerializeField] private float maxNodeSeparationPerBeat = 350;
+    [SerializeField] private float minNodeSeparationPerBeat = 200;
     [SerializeField] private float tapTimeLenienceInBeats = 0.1f; //The fact that lenience is in beats and not seconds makes it depend on the tempo
     [SerializeField] private float connectorBeamHeightAsFractionOfNodeDiameter = 0.3f;
     [SerializeField] private float guideRowSeparation = 45;
@@ -62,6 +61,7 @@ public class GameUIManager : MonoBehaviour {
     [SerializeField] private float guideMusicNotationSize = 0.5f;
     [SerializeField] private float tapIndicatorYSeparation = 2;
     [SerializeField] private float tapIndicatorSize = 0.75f;
+    [SerializeField] private float removeGuidesButtonSeparation = 80;
     [SerializeField] private Color unreachedGuideColor = new(0.2235294f, 0.2588235f, 1, 1);
     [SerializeField] private Color reachedGuideColor = new(1, 0.6509804f, 0.1882353f, 1);
     [SerializeField] private Color unreachedGuideMusicNotationColor = new(0, 0.03529412f, 0.7490196f, 1);
@@ -79,11 +79,14 @@ public class GameUIManager : MonoBehaviour {
     [Space]
     [Header("Results")]
     [SerializeField] private RectTransform resultsPanel;
-    [SerializeField] private RectTransform guidedResultsInfoContainer;
-    [SerializeField] private RectTransform guidelessResultsInfoContainer;
+    [SerializeField] private RectTransform tapAccuracyTextTransform;
+    [SerializeField] private RectTransform retryButton;
+    [SerializeField] private RectTransform retryWithoutGuidesButton;
+    [SerializeField] private RectTransform nextLevelButton;
     [Space]
     [SerializeField] private float resultsPanelShowingDelay = 1.35f;
-    [SerializeField] private Color highlightedTextColor = new(1, 0.6509804f, 0.1882353f, 1);
+    [SerializeField] private Color defaultUIColor = new(0.2235294f, 0.2588235f, 1, 1);
+    [SerializeField] private Color highlightedUIColor = new(1, 0.7484716f, 0.2f, 1);
 
 
     private GeneralUIManager generalUIManager;
@@ -198,6 +201,23 @@ public class GameUIManager : MonoBehaviour {
 
     }
 
+    public void SetupPregameScreen() {
+
+        measures = Measure.ReadTextInput(levelSO.GetLevelContents());
+        sheetMusicUIManager.CreateFullMusicNotationUI(measures, musicNotationPanel, size: 1.2f);
+        StartCoroutine(generalUIManager.SlideObjectCoroutine(musicNotationPanel, musicNotationPanelPosition, movingTime: 0.5f));
+
+        StartCoroutine(generalUIManager.SlideObjectCoroutine(showGuideButton, showGuideButtonPosition, movingTime: 0.5f));
+        StartCoroutine(generalUIManager.SlideObjectCoroutine(metronomePanel, metronomePanelPosition, movingTime: 0.5f));
+
+        beatCounterPanel.localPosition = beatCountersHidingPanel.localPosition;
+        CreateBeatCounters(measures[0].GetTimeSignature(), beatCounterPanel, measures[0].GetBeatGrouping());
+        StartCoroutine(generalUIManager.SlideObjectCoroutine(beatCounterPanel, beatCounterPanelPosition, movingTime: 0.5f));
+
+        playStopButton.GetComponent<HoldAndReleaseButton>().EnableButton();
+
+    }
+
     //This method is invoked when the user clicks the ORANGE X BUTTON on the top left of the screen.
     public void UnconfirmedExitLevelButtonAction() {
 
@@ -210,7 +230,18 @@ public class GameUIManager : MonoBehaviour {
         }
 
         exitLevelPanel.gameObject.SetActive(true);
-        exitLevelPanel.GetChild(0).Find("Text").GetComponent<TMP_Text>().text = $"Are you sure you want to exit this {(levelSO is TutorialScriptableObject ? "tutorial" : "practice")}?";
+        if(levelSO is TutorialScriptableObject) {
+
+            exitLevelPanel.GetChild(0).GetChild(1).gameObject.SetActive(true);
+            exitLevelPanel.GetChild(0).GetChild(2).gameObject.SetActive(false);
+
+        } else {
+
+            exitLevelPanel.GetChild(0).GetChild(1).gameObject.SetActive(false);
+            exitLevelPanel.GetChild(0).GetChild(2).gameObject.SetActive(true);
+
+        }
+
         Time.timeScale = 0;
 
     }
@@ -230,7 +261,7 @@ public class GameUIManager : MonoBehaviour {
 
         Time.timeScale = 1;
 
-        //First stop the gameplay coroutines and reset the metronome and the play/pause button.
+        //First stop the gameplay coroutines and reset the metronome and the play/stop button.
         if(gameplaySequenceCoroutine != null) {
 
             StopCoroutine(gameplaySequenceCoroutine);
@@ -247,8 +278,8 @@ public class GameUIManager : MonoBehaviour {
 
         }
         metronomePendulum.localEulerAngles = Vector3.zero;
-        playPauseButton.GetChild(1).Find("Play Icon").gameObject.SetActive(true);
-        playPauseButton.GetChild(1).Find("Pause Icon").gameObject.SetActive(false);
+        playStopButton.GetChild(1).GetChild(0).gameObject.SetActive(true);
+        playStopButton.GetChild(1).GetChild(1).gameObject.SetActive(false);
         noteTappingIsOn = false;
         tapTimeWindowIndex = 0;
 
@@ -256,7 +287,7 @@ public class GameUIManager : MonoBehaviour {
         //Now remove this screen's UI.
         exitLevelPanel.gameObject.SetActive(false);
         resultsPanel.gameObject.SetActive(false);
-        generalUIManager.MoveObjectOffScreen(metronomePanel, "horizontal", true, callback: () => {
+        generalUIManager.MoveObjectOffScreen(metronomePanel, "vertical", true, callback: () => {
 
             for(int i = 0; i < beatCounterPanel.childCount; i++) {
 
@@ -304,7 +335,6 @@ public class GameUIManager : MonoBehaviour {
             generalUIManager.MoveObjectOffScreen(showGuideButton, "vertical", false);
 
         }
-        generalUIManager.MoveObjectOffScreen(exitLevelButton, "vertical", true);
         removeGuidesButton.gameObject.SetActive(false);
 
         generalUIManager.ResetupLevelSelectScreen(); //Bring out the level select screen
@@ -313,15 +343,15 @@ public class GameUIManager : MonoBehaviour {
 
     public void PlayPauseButtonAction() {
 
-        if(playPauseButton.GetChild(1).Find("Play Icon").gameObject.activeSelf) {
+        if(playStopButton.GetChild(1).Find("Play Icon").gameObject.activeSelf) {
 
             ResetLevel();
 
             gameplaySequenceCoroutine = PlayLevelCoroutine();
             StartCoroutine(gameplaySequenceCoroutine);
 
-            playPauseButton.GetChild(1).Find("Play Icon").gameObject.SetActive(false);
-            playPauseButton.GetChild(1).Find("Pause Icon").gameObject.SetActive(true);
+            playStopButton.GetChild(1).GetChild(0).gameObject.SetActive(false);
+            playStopButton.GetChild(1).GetChild(1).gameObject.SetActive(true);
 
             generalUIManager.MoveObjectOffScreen(showGuideButton, "vertical", false);
 
@@ -331,8 +361,8 @@ public class GameUIManager : MonoBehaviour {
 
             StopLevel();
 
-            playPauseButton.GetChild(1).Find("Play Icon").gameObject.SetActive(true);
-            playPauseButton.GetChild(1).Find("Pause Icon").gameObject.SetActive(false);
+            playStopButton.GetChild(1).GetChild(0).gameObject.SetActive(true);
+            playStopButton.GetChild(1).GetChild(1).gameObject.SetActive(false);
 
             if(guidePanel.gameObject.activeSelf) {
 
@@ -360,8 +390,9 @@ public class GameUIManager : MonoBehaviour {
         StartCoroutine(generalUIManager.SlideObjectCoroutine(guidePanel, guidePanelPosition, callback: () => {
 
             removeGuidesButton.gameObject.SetActive(true);
-            RectTransform firstNodeRow = nodesContainer.GetChild(0).GetComponent<RectTransform>();
-            removeGuidesButton.localPosition = firstNodeRow.localPosition + Vector3.left * (removeGuidesButton.rect.width / 2 + firstNodeRow.rect.width / 2 + removeGuidesButtonSeparation);
+
+            RectTransform firstMusicNotationTransform = guideMusicNotationContainer.GetChild(0).GetComponent<RectTransform>();
+            removeGuidesButton.localPosition = Vector3.up * (firstMusicNotationTransform.localPosition.y + removeGuidesButtonSeparation + removeGuidesButton.rect.height / 2);
 
         }));
         generalUIManager.MoveObjectOffScreen(showGuideButton, "vertical", false);
@@ -409,24 +440,6 @@ public class GameUIManager : MonoBehaviour {
             generalUIManager.MoveObjectOffScreen(guidePanel, "vertical", false);
 
         }
-
-    }
-
-    public void SetupPregameScreen() {
-
-        measures = Measure.ReadTextInput(levelSO.GetLevelContents());
-        sheetMusicUIManager.CreateFullMusicNotationUI(measures, musicNotationPanel);
-        StartCoroutine(generalUIManager.SlideObjectCoroutine(musicNotationPanel, musicNotationPanelPosition, movingTime: 0.5f));
-
-        StartCoroutine(generalUIManager.SlideObjectCoroutine(exitLevelButton, exitLevelButtonPosition));
-        StartCoroutine(generalUIManager.SlideObjectCoroutine(metronomePanel, new Vector3(-metronomePanel.rect.width / 2f, 0, 0)));
-        StartCoroutine(generalUIManager.SlideObjectCoroutine(showGuideButton, showGuideButtonPosition, movingTime: 0.5f));
-        
-        beatCounterPanel.localPosition = beatCountersHidingPanel.localPosition;
-        CreateBeatCounters(measures[0].GetTimeSignature(), beatCounterPanel, measures[0].GetBeatGrouping());
-        StartCoroutine(generalUIManager.SlideObjectCoroutine(beatCounterPanel, beatCounterPanelPosition, movingTime: 0.5f));
-
-        playPauseButton.GetComponent<HoldAndReleaseButton>().EnableButton();
 
     }
 
@@ -597,10 +610,12 @@ public class GameUIManager : MonoBehaviour {
             metronomePendulum.localRotation = Quaternion.Euler(0, 0, pendulumRotation);
             if(beginRotation < 0 && pendulumRotation >= 0) {
 
+                metronomePendulum.localRotation = Quaternion.Euler(Vector3.zero);
                 yield break;
 
             } else if(beginRotation > 0 && pendulumRotation <= 0) {
 
+                metronomePendulum.localRotation = Quaternion.Euler(Vector3.zero);
                 yield break;
 
             } else {
@@ -764,7 +779,7 @@ public class GameUIManager : MonoBehaviour {
         }
 
         //We will use the row with the most beat counters as the standard for the width of beat counters
-        FindLargestRowInBeatCounterGrouping(counterGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow);
+        FindLargestRowInBeatCounterGrouping(counterGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow, out int numRows);
 
         float counterTransformWidth = parent.rect.width / (maxNumTransformsPerRow + counterTransformSpacing * (maxNumTransformsPerRow - numGroupsInMaxRow) + counterTransformGroupSpacing * (numGroupsInMaxRow - 1));
         float counterTransformSpacingWidth = counterTransformWidth * counterTransformSpacing;
@@ -773,7 +788,7 @@ public class GameUIManager : MonoBehaviour {
 
         //Create and place the beat counters
         float xPosition = -parent.rect.width / 2f + counterTransformWidth / 2f;
-        float yPosition = parent.rect.height / 2f - beatCounterPrefab.GetComponent<RectTransform>().rect.height / 2f;
+        float yPosition = (numRows - 1) * (counterTransformHeight + counterTransformRowSpacingWidth) / 2f;
         int numCounterTransformsInRow = 0;
         for(int group = 0; group < counterGrouping.Length; group++) {
 
@@ -783,6 +798,7 @@ public class GameUIManager : MonoBehaviour {
 
                 RectTransform counterTransform = Instantiate(beatCounterPrefab, parent).GetComponent<RectTransform>();
                 counterTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, counterTransformWidth);
+                counterTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, counterTransformHeight);
                 counterTransform.localPosition = new Vector3(xPosition, yPosition, 0);
                 counterTransform.GetComponent<Image>().color = defaultBeatCounterColor;
 
@@ -875,7 +891,6 @@ public class GameUIManager : MonoBehaviour {
 
                 //If the next node would end up outside of the container panel, then wrap this row up.
                 ConnectNodesInRow(parent, numRowsCompleted + 1, beginXPosition, minGuideRowWidths[numRowsCompleted] * nodeSeparationPerBeat / minNodeSeparationPerBeat, yPosition, nodeRadius);
-                //print(minGuideRowWidths[numRowsCompleted] + " " + minGuideRowWidths.Count);
 
                 //Lastly, update the x and y positions.
                 beginXPosition = -parent.rect.width / 2;
@@ -944,7 +959,7 @@ public class GameUIManager : MonoBehaviour {
         noteTappingIsOn = false;
         mouseIsDown = false;
         noteHasBeenTapped = false;
-        playPauseButton.GetComponent<HoldAndReleaseButton>().DisableButton();
+        playStopButton.GetComponent<HoldAndReleaseButton>().DisableButton();
 
         //Stop the gameplay sequence and metronome.
         //Let the node guide coroutine finish on its own though.
@@ -969,36 +984,39 @@ public class GameUIManager : MonoBehaviour {
         StartCoroutine(StopMetronomePendulumCoroutine());
         
         //Reset the play/pause button.
-        playPauseButton.GetChild(1).Find("Play Icon").gameObject.SetActive(true);
-        playPauseButton.GetChild(1).Find("Pause Icon").gameObject.SetActive(false);
+        playStopButton.GetChild(1).GetChild(0).gameObject.SetActive(true);
+        playStopButton.GetChild(1).GetChild(1).gameObject.SetActive(false);
 
         yield return new WaitForSeconds(resultsPanelShowingDelay);
 
         resultsPanel.gameObject.SetActive(true);
         if(guidePanel.gameObject.activeSelf) {
 
-            guidedResultsInfoContainer.gameObject.SetActive(true);
-            guidelessResultsInfoContainer.gameObject.SetActive(false);
+            //Results panel when guides were used
+            nextLevelButton.gameObject.SetActive(false);
+            tapAccuracyTextTransform.gameObject.SetActive(true);
+            retryWithoutGuidesButton.gameObject.SetActive(true);
 
             float accuracy = Mathf.RoundToInt((float) numAccurateTapIndicators / numTapIndicators * 100);
-            TMP_Text accuracyText = guidedResultsInfoContainer.Find("Stats Panel").Find("Tap Accuracy Text").GetComponent<TMP_Text>();
+            TMP_Text accuracyText = tapAccuracyTextTransform.GetComponent<TMP_Text>();
             accuracyText.text = $"{accuracy}%";
             if(accuracy == 100) {
 
-                accuracyText.color = highlightedTextColor;
-                accuracyText.fontStyle = FontStyles.Bold;
+                accuracyText.color = highlightedUIColor;
+                retryButton.GetComponent<HoldAndReleaseButton>().SetColor(defaultUIColor, 0.3f);
+                retryWithoutGuidesButton.GetComponent<HoldAndReleaseButton>().SetColor(highlightedUIColor, 0.25f);
 
             } else {
 
-                accuracyText.color = Color.black;
-                accuracyText.fontStyle = FontStyles.Normal;
+                accuracyText.color = defaultUIColor;
+                retryButton.GetComponent<HoldAndReleaseButton>().SetColor(highlightedUIColor, 0.25f);
+                retryWithoutGuidesButton.GetComponent<HoldAndReleaseButton>().SetColor(defaultUIColor, 0.3f);
 
             }
 
         } else {
 
-            guidedResultsInfoContainer.gameObject.SetActive(false);
-            guidelessResultsInfoContainer.gameObject.SetActive(true);
+            //Results panel when guides were not used
 
         }
 
@@ -1052,7 +1070,7 @@ public class GameUIManager : MonoBehaviour {
 
         ClearGuide();
 
-        playPauseButton.GetComponent<HoldAndReleaseButton>().EnableButton();
+        playStopButton.GetComponent<HoldAndReleaseButton>().EnableButton();
 
     }
 
@@ -1161,13 +1179,14 @@ public class GameUIManager : MonoBehaviour {
     }
 
     //NOTE TO SELF: THIS METHOD BELOW IS FOR THE METRONOME BEAT COUNTERS, *not* THE NODE GUIDES.
-    private void FindLargestRowInBeatCounterGrouping(int[] counterGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow) {
+    private void FindLargestRowInBeatCounterGrouping(int[] counterGrouping, out int maxNumTransformsPerRow, out int numGroupsInMaxRow, out int numRows) {
 
         //Find how many transforms there will be in the first row. This number cannot be greater than 8
         int numTransformsPerRow = 0;
         maxNumTransformsPerRow = -1;
         int numGroupsInRow = 0;
         numGroupsInMaxRow = 0;
+        numRows = 1;
         for(int i = 0; i < counterGrouping.Length; i++) {
 
             numGroupsInRow++;
@@ -1182,6 +1201,7 @@ public class GameUIManager : MonoBehaviour {
                 }
                 numTransformsPerRow = counterGrouping[i];
                 numGroupsInRow = 1;
+                numRows++;
 
             } else {
 

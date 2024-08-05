@@ -124,12 +124,12 @@ public class HoldAndReleaseButton : MonoBehaviour, IPointerClickHandler, IPointe
 
     }
 
-    public void SetColor(Color color) {
+    public void SetColor(Color color, float shadowDesaturation = 0.2f) {
 
         Color.RGBToHSV(color, out float hue, out float sat, out float val);
 
         buttonTransform.GetComponent<Image>().color = color;
-        shadowTransform.GetComponent<Image>().color = Color.HSVToRGB(hue, sat - 0.2f, val);
+        shadowTransform.GetComponent<Image>().color = Color.HSVToRGB(hue, sat - shadowDesaturation, val);
         pressedColor = Color.HSVToRGB(hue, sat, val - 0.3f);
 
     }

@@ -7,39 +7,39 @@ using UnityEngine.UI;
 public class GeneralUIManager : MonoBehaviour {
 
     [SerializeField] private Canvas canvas;
-    
+
+    [Space]
+    [Space]
     [Header("Main Menu Screen")]
-    [SerializeField] private RectTransform tutorialsButton;
+    [SerializeField] private RectTransform learnButton;
     [SerializeField] private RectTransform practiceButton;
     [SerializeField] private RectTransform titlePanel;
+    [SerializeField] private RectTransform titleTextTransform;
     [SerializeField] private RectTransform statsButton;
     [SerializeField] private RectTransform settingsButton;
     [SerializeField] private RectTransform[] difficultyButtons;
-    [SerializeField] private RectTransform background;
     [Space]
-    [SerializeField] private float backgroundScrollSpeed = 0.3f;
-    [SerializeField] private Vector3 titlePanelPosition = new(-250, 0, 0);
-    [SerializeField] private Vector3 tutorialsButtonPosition = new(242, 75, 0);
-    [SerializeField] private Vector3 practiceButtonPosition = new(242, -75, 0);
-    [SerializeField] private Vector3 levelTypeHeaderPosition1 = new(-320, 164, 0);
-    [SerializeField] private Vector3[] difficultyButtonPositions = new Vector3[] { new(-372.5f, 24, 0), new(-372.5f, -81, 0), new(-372.5f, -186, 0) };
-    [SerializeField] private Vector3 difficultyHeaderPosition = new(-372.5f, 164, 0);
-    [SerializeField] private Vector3 difficultyButtonHidingPosition = new(-365, -316, 0);
-    [SerializeField] private Vector3 levelTypeHeaderPosition2 = new(-27, 164, 0);
-    [SerializeField] private Vector3 statsButtonPosition = new(-105, -41.6f, 0);
+    [SerializeField] private Vector3 titlePanelDefaultPosition = new(0, 540, 0);
+    [SerializeField] private Vector3 titleTextPosition = new(0, 469, 0);
+    [SerializeField] private Vector3 titlePanelLevelSelectPosition = new(0, 850, 0);
+    [SerializeField] private Vector3 learnButtonPosition = new(0, 840, 0);
+    [SerializeField] private Vector3 practiceButtonPosition = new(0, 490, 0);
+    [SerializeField] private Vector3 levelTypeHeaderPosition = new(0, -100, 0);
+    [SerializeField] private Vector3[] difficultyButtonPositions = new Vector3[] { new(0, 850, 0), new(0, 550, 0), new(0, 250, 0) };
+    [SerializeField] private Vector3 difficultyHeaderPosition = new(0, -375, 0);
+    [SerializeField] private Vector3 statsButtonPosition = new(-175, 154, 0);
+    [SerializeField] private Vector3 settingsButtonPosition = new(175, 165, 0);
 
     [Space]
     [Space]
     [Header("Level Select Screen")]
     [SerializeField] private RectTransform levelButtons;
-    [SerializeField] private RectTransform leftLevelPreviewPanel;
-    [SerializeField] private RectTransform rightLevelPreviewPanel;
+    [SerializeField] private RectTransform levelPreviewPanel;
+    [SerializeField] private RectTransform levelPreviewBottomPanel;
     [Space]
-    [SerializeField] private Vector3 levelButtonsPosition = new(0, -87, 0);
-    [SerializeField] private Color tutorialsLevelPreviewColor = new(0.2235294f, 0.2588235f, 1, 1);
-    [SerializeField] private Color practiceLevelPreviewColor = new(0.2156863f, 0, 1, 1);
-    [SerializeField] private Color selectedTutorialsLevelButtonColor = new(1, 0.8431373f, 0.2196078f, 1);
-    [SerializeField] private Color selectedPracticeLevelButtonColor = new(1, 0.6951936f, 0.2196078f, 1);
+    [SerializeField] private Vector3 levelButtonsPosition = new(0, 685, 0);
+    [SerializeField] private Vector3 levelPreviewPanelPosition = new(0, 680, 0);
+    [SerializeField] private Color selectedLevelButtonColor = new(1, 0.7411765f, 0.2196078f, 1);
     [SerializeField] private LevelScriptableObject[] easyLevels;
     [SerializeField] private LevelScriptableObject[] mediumLevels;
     [SerializeField] private LevelScriptableObject[] hardLevels;
@@ -57,18 +57,12 @@ public class GeneralUIManager : MonoBehaviour {
     private enum LevelType {Tutorial, Practice}
     private SheetMusicUIManager sheetMusicUIManager;
     private GameUIManager gameUIManager;
-    private bool shouldMainMenuBackgroundBeScrolling = true;
     private LevelType currentSelectedLevelType;
     private int currentSelectedDifficulty = -1;
     private RectTransform currentSelectedLevelButtonTransform = null;
-    private RectTransform levelPreviewPanel = null;
     private LevelScriptableObject currentLevelSO;
-    private IEnumerator backgroundScrollCoroutine;
 
     void Start() {
-
-        backgroundScrollCoroutine = MainMenuBackgroundScrollCoroutine(background);
-        StartCoroutine(backgroundScrollCoroutine); //Scrolling background
 
         sheetMusicUIManager = FindObjectOfType<SheetMusicUIManager>(); //Get SheetMusicUIManager
         gameUIManager = FindObjectOfType<GameUIManager>(); //Get GameUIManager
@@ -82,10 +76,6 @@ public class GeneralUIManager : MonoBehaviour {
         }
         levelButtons.gameObject.SetActive(false);
 
-        //Set the preview panels right off of the screen
-        MoveObjectOffScreen(leftLevelPreviewPanel, "horizontal", false, movingTime: 0);
-        MoveObjectOffScreen(rightLevelPreviewPanel, "horizontal", true, movingTime: 0);
-
         MoveObjectOffScreen(settingsPanel, "horizontal", false, movingTime: 0); //Set the settings panel right off of the screen
 
     }
@@ -96,28 +86,35 @@ public class GeneralUIManager : MonoBehaviour {
     /// <param name="buttonTransform"></param>
     public void LevelTypeButtonAction(RectTransform buttonTransform) {
 
-        MoveObjectOffScreen(titlePanel, "horizontal", false);
+        MoveObjectOffScreen(titleTextTransform, "vertical", true);
+        MoveObjectOffScreen(settingsButton, "vertical", false);
+        MoveObjectOffScreen(statsButton, "vertical", false);
 
-        //Move off-scren the level type button that wasn't clicked on
+        //Move off-screen the level type button that wasn't clicked on
         if(buttonTransform == practiceButton) {
 
-            MoveObjectOffScreen(tutorialsButton, "horizontal", true);
+            MoveObjectOffScreen(learnButton, "vertical", false);
             currentSelectedLevelType = LevelType.Practice;
 
         } else {
 
-            MoveObjectOffScreen(practiceButton, "horizontal", true);
+            MoveObjectOffScreen(practiceButton, "vertical", false);
             currentSelectedLevelType = LevelType.Tutorial;
 
         }
 
         //Turn the selected button into a header and move it up
-        StartCoroutine(SlideObjectCoroutine(buttonTransform, levelTypeHeaderPosition1, callback: () => {
+        StartCoroutine(SlideObjectCoroutine(buttonTransform, levelTypeHeaderPosition + titlePanelLevelSelectPosition, useAnchoredPosition: false, callback: () => {
 
-            buttonTransform.Find("X Button").gameObject.SetActive(true);
+            buttonTransform.Find("Back Button").gameObject.SetActive(true);
 
         }));
         buttonTransform.GetComponent<HoldAndReleaseButton>().DisableButton();
+
+        //Move the title panel up and remove the white bars
+        StartCoroutine(SlideObjectCoroutine(titlePanel, titlePanelLevelSelectPosition));
+        //Remove the white bars
+        titlePanel.GetChild(0).gameObject.SetActive(false);
 
         //Bring out the difficulty buttons
         for(int i = 0; i < 3; i++) {
@@ -125,11 +122,12 @@ public class GeneralUIManager : MonoBehaviour {
             StartCoroutine(SlideObjectCoroutine(difficultyButtons[i], difficultyButtonPositions[i]));
 
         }
-
+        /*
         //Set the level preview panel color (the level preview panel's color is dependent on the level type header color)
         Color previewPanelColor = currentSelectedLevelType == LevelType.Tutorial ? tutorialsLevelPreviewColor : practiceLevelPreviewColor;
         SetLevelPreviewPanelColor(leftLevelPreviewPanel, previewPanelColor);
         SetLevelPreviewPanelColor(rightLevelPreviewPanel, previewPanelColor);
+        */
 
     }
 
@@ -143,33 +141,40 @@ public class GeneralUIManager : MonoBehaviour {
 
             //Move off-screen all the difficulty buttons and set all of them to their button state (as oppposed to their header state)
             MoveObjectOffScreen(difficultyButtons[i], "vertical", false);
-            difficultyButtons[i].Find("X Button").gameObject.SetActive(false);
+            difficultyButtons[i].Find("Back Button").gameObject.SetActive(false);
             difficultyButtons[i].GetComponent<HoldAndReleaseButton>().EnableButton();
 
         }
+
         //Move the level buttons off of the screen
-        MoveObjectOffScreen(levelButtons, "vertical", false);
+        if(levelButtons.gameObject.activeSelf) {
 
-        //Slide the title panel and the two level type buttons back into their places
-        StartCoroutine(SlideObjectCoroutine(titlePanel, titlePanelPosition));
-        StartCoroutine(SlideObjectCoroutine(tutorialsButton, tutorialsButtonPosition));
-        StartCoroutine(SlideObjectCoroutine(practiceButton, practiceButtonPosition));
-        
-        //Re-enable the previously disabled button and remove its back button
-        levelTypeButtonTransform.GetComponent<HoldAndReleaseButton>().EnableButton();
-        levelTypeButtonTransform.Find("X Button").gameObject.SetActive(false);
-
-        //Set the preview panel right off screen
-        if(levelPreviewPanel == leftLevelPreviewPanel) {
-
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", false);
-
-        } else if(levelPreviewPanel == rightLevelPreviewPanel) {
-
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", true);
+            MoveObjectOffScreen(levelButtons, "vertical", false);
 
         }
+
+        //Slide the title panel back into place
+        StartCoroutine(SlideObjectCoroutine(titlePanel, titlePanelDefaultPosition));
+        //Re-activate the white bars
+        titlePanel.GetChild(0).gameObject.SetActive(true);
+
+        StartCoroutine(SlideObjectCoroutine(titleTextTransform, titleTextPosition));
+        StartCoroutine(SlideObjectCoroutine(learnButton, learnButtonPosition));
+        StartCoroutine(SlideObjectCoroutine(practiceButton, practiceButtonPosition));
         
+        //Turn the header back into a button
+        levelTypeButtonTransform.GetComponent<HoldAndReleaseButton>().EnableButton();
+        levelTypeButtonTransform.Find("Back Button").gameObject.SetActive(false);
+
+        StartCoroutine(SlideObjectCoroutine(statsButton, statsButtonPosition));
+        StartCoroutine(SlideObjectCoroutine(settingsButton, settingsButtonPosition));
+
+        if(levelPreviewPanel.gameObject.activeSelf) {
+
+            LevelPreviewBackButtonAction();
+
+        }
+
     }
 
     /// <summary>
@@ -184,11 +189,7 @@ public class GeneralUIManager : MonoBehaviour {
             if(difficultyButton != buttonTransform) {
 
                 //Slide off-screen the difficulty buttons that weren't selected by the user.
-                MoveObjectOffScreen(difficultyButton, "horizontal", false, callback: () => {
-
-                    difficultyButton.anchoredPosition3D = difficultyButtonHidingPosition;
-
-                });
+                MoveObjectOffScreen(difficultyButton, "vertical", false);
 
             } else {
 
@@ -199,18 +200,15 @@ public class GeneralUIManager : MonoBehaviour {
 
         }
 
-        RectTransform levelTypeHeader = currentSelectedLevelType == LevelType.Tutorial ? tutorialsButton : practiceButton;
-        StartCoroutine(SlideObjectCoroutine(levelTypeHeader, levelTypeHeaderPosition2)); //Slide the level type header to the right
         //Slide the difficulty header up and then display its back button.
-        StartCoroutine(SlideObjectCoroutine(buttonTransform, difficultyHeaderPosition, callback: () => {
+        StartCoroutine(SlideObjectCoroutine(buttonTransform, difficultyHeaderPosition + titlePanel.localPosition, useAnchoredPosition: false, callback: () => {
 
-            buttonTransform.Find("X Button").gameObject.SetActive(true);
+            buttonTransform.Find("Back Button").gameObject.SetActive(true);
 
         }));
         buttonTransform.GetComponent<HoldAndReleaseButton>().DisableButton(); //Disable the difficulty header's button functionality
 
-        //Set the level buttons' colors and hide all unavailable levels.
-        Color difficultyColor = GetCurrentDifficultyColor();
+        //Find the number of available levels.
         int numLevelsAvailable = 0;
         if(currentSelectedLevelType == LevelType.Tutorial) {
 
@@ -245,6 +243,10 @@ public class GeneralUIManager : MonoBehaviour {
             }
 
         }
+
+        //Hide all unavailable levels and set the color.
+        Color normalColor = GetCurrentDifficultyColor();
+        Color levelButtonColor = DesaturateColor(normalColor, 0.3f);
         for(int i = 0; i < levelButtons.childCount; i++) {
 
             Transform levelButtonTransform = levelButtons.GetChild(i);
@@ -252,7 +254,7 @@ public class GeneralUIManager : MonoBehaviour {
             if(i < numLevelsAvailable) {
 
                 levelButtonTransform.gameObject.SetActive(true);
-                levelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(difficultyColor);
+                levelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(levelButtonColor);
 
             } else {
 
@@ -261,6 +263,13 @@ public class GeneralUIManager : MonoBehaviour {
             }
 
         }
+
+        //Set the color of the level preview panel.
+        Color desaturatedColor = DesaturateColor(normalColor, 0.15f);
+        levelPreviewPanel.GetComponent<Image>().color = normalColor;
+        levelPreviewBottomPanel.GetComponent<Image>().color = levelButtonColor;
+        levelPreviewBottomPanel.Find("Bar").GetComponent<Image>().color = normalColor;
+
         //Slide the level buttons into the UI.
         StartCoroutine(SlideObjectCoroutine(levelButtons, levelButtonsPosition));
 
@@ -276,32 +285,16 @@ public class GeneralUIManager : MonoBehaviour {
 
             //Slide the difficulty headers back in place, hide their back buttons, and re-enable their button functionality
             StartCoroutine(SlideObjectCoroutine(difficultyButtons[i], difficultyButtonPositions[i]));
-            difficultyButtons[i].Find("X Button").gameObject.SetActive(false);
+            difficultyButtons[i].Find("Back Button").gameObject.SetActive(false);
             difficultyButtons[i].GetComponent<HoldAndReleaseButton>().EnableButton();
 
         }
 
         MoveObjectOffScreen(levelButtons, "vertical", false); //Move the level buttons off of the screen
 
-        //Move the level type header left, back into its original position
-        if(currentSelectedLevelType == LevelType.Tutorial) {
+        if(levelPreviewPanel.gameObject.activeSelf) {
 
-            StartCoroutine(SlideObjectCoroutine(tutorialsButton, levelTypeHeaderPosition1));
-
-        } else {
-
-            StartCoroutine(SlideObjectCoroutine(practiceButton, levelTypeHeaderPosition1));
-
-        }
-
-        //Set the preview panel right off screen
-        if(levelPreviewPanel == leftLevelPreviewPanel) {
-
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", false);
-
-        } else if(levelPreviewPanel == rightLevelPreviewPanel) {
-
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", true);
+            LevelPreviewBackButtonAction();
 
         }
 
@@ -310,39 +303,9 @@ public class GeneralUIManager : MonoBehaviour {
     public void LevelButtonAction(int levelNumber) {
 
         RectTransform levelButtonTransform = (RectTransform) levelButtons.GetChild(levelNumber - 1);
-        
-        if(levelButtonTransform == currentSelectedLevelButtonTransform) {
-
-            LevelPreviewBackButtonAction();
-            return;
-
-        }
-
-        //If the level button is on the right side of the screen, then bring in the left preview panel, and vice versa
-        if(levelNumber % 9 > 4 || levelNumber % 9 == 0) {
-
-            levelPreviewPanel = leftLevelPreviewPanel;
-
-            if(rightLevelPreviewPanel.gameObject.activeSelf) {
-
-                MoveObjectOffScreen(rightLevelPreviewPanel, "horizontal", true);
-
-            }
-
-        } else {
-
-            levelPreviewPanel = rightLevelPreviewPanel;
-
-            if(leftLevelPreviewPanel.gameObject.activeSelf) {
-
-                MoveObjectOffScreen(leftLevelPreviewPanel, "horizontal", false);
-
-            }
-
-        }
 
         //Highlight the button
-        levelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(currentSelectedLevelType == LevelType.Tutorial ? selectedTutorialsLevelButtonColor : selectedPracticeLevelButtonColor);
+        levelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(selectedLevelButtonColor);
 
         //De-highlight the previously selected button
         if(currentSelectedLevelButtonTransform != null) {
@@ -352,80 +315,40 @@ public class GeneralUIManager : MonoBehaviour {
         }
         currentSelectedLevelButtonTransform = levelButtonTransform; //Update the selected button
 
-        //Bring out the preview panel
-        Vector3 levelPreviewPanelPosition;
-        if(levelPreviewPanel == leftLevelPreviewPanel) {
-
-            levelPreviewPanelPosition = new Vector3(0, 0, 0);
-
-        } else {
-
-            levelPreviewPanelPosition = new Vector3(0, 0, 0);
-
-        }
+        //Bring in the level preview panel
         StartCoroutine(SlideObjectCoroutine(levelPreviewPanel, levelPreviewPanelPosition));
 
         //Set the level number text
-        levelPreviewPanel.Find("Level Number Text").GetComponent<TMP_Text>().text = $"{levelNumber}";
-
+        levelPreviewBottomPanel.Find("Level Number Text").GetComponent<TMP_Text>().text = $"{levelNumber}";
 
         //Display the level-specific details
         currentLevelSO = GetLevelScriptableObject(currentSelectedLevelType == LevelType.Tutorial, currentSelectedDifficulty, levelNumber); //Get the SO
 
         //Display the level description
-        string difficultyStr = currentSelectedDifficulty switch {
-
-            0 => "Easy",
-            1 => "Medium",
-            2 => "Hard",
-            _ => ""
-
-        };
-        string description = currentLevelSO == null ? $"{difficultyStr} {(currentSelectedLevelType == LevelType.Tutorial ? "tutorial" : "practice")} level {levelNumber} is coming soon." : currentLevelSO.GetLevelDescription();
-        levelPreviewPanel.Find("Text Panel").GetChild(0).GetComponent<TMP_Text>().text = description;
+        levelPreviewBottomPanel.Find("Level Title Text").GetComponent<TMP_Text>().text = currentLevelSO.GetLevelDescription();
 
         //Display the music notation
-        if(currentLevelSO != null) {
+        Transform musicNotationContainer = levelPreviewPanel.Find("Music Notation Container");
+        musicNotationContainer.gameObject.SetActive(true);
+        while(musicNotationContainer.childCount != 0) { //Clear the current music notation (if any)
 
-            Transform musicNotationPanel = levelPreviewPanel.Find("Music Notation Panel");
-            musicNotationPanel.gameObject.SetActive(true);
-            while(musicNotationPanel.childCount != 0) { //Clear the current music notation (if any)
-
-                DestroyImmediate(musicNotationPanel.GetChild(0).gameObject);
-
-            }
-            sheetMusicUIManager.CreateFullMusicNotationUI(Measure.ReadTextInput(currentLevelSO.GetLevelContents()), (RectTransform) musicNotationPanel, size: 0.65f, musicNotationBoundsInset: 10);
-
-            levelPreviewPanel.Find("Cancel & Play Buttons Panel").Find("Play Button").GetComponent<HoldAndReleaseButton>().EnableButton();
-
-        } else {
-
-            levelPreviewPanel.Find("Music Notation Panel").gameObject.SetActive(false);
-            levelPreviewPanel.Find("Cancel & Play Buttons Panel").Find("Play Button").GetComponent<HoldAndReleaseButton>().LockButton();
+            DestroyImmediate(musicNotationContainer.GetChild(0).gameObject);
 
         }
+        sheetMusicUIManager.CreateFullMusicNotationUI(Measure.ReadTextInput(currentLevelSO.GetLevelContents()), (RectTransform) musicNotationContainer, size: 1f, musicNotationBoundsInset: 10);
 
     }
 
     public void LevelPreviewBackButtonAction() {
 
-        currentSelectedLevelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(GetCurrentDifficultyColor()); //De-highlighting the button
+        currentSelectedLevelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(DesaturateColor(GetCurrentDifficultyColor(), 0.3f)); //De-highlighting the button
         currentSelectedLevelButtonTransform = null;
-        //Set the preview panel right off screen
-        if(levelPreviewPanel == leftLevelPreviewPanel) {
+        MoveObjectOffScreen(levelPreviewPanel, "vertical", false);
 
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", false);
+        Transform musicNotationContainer = levelPreviewPanel.Find("Music Notation Container");
+        for(int i = 0; i < musicNotationContainer.childCount; i++) {
 
-        } else if(levelPreviewPanel == rightLevelPreviewPanel) {
-
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", true);
-
-        }
-
-        Transform musicNotationPanel = levelPreviewPanel.Find("Music Notation Panel");
-        for(int i = 0; i < musicNotationPanel.childCount; i++) {
-
-            Destroy(musicNotationPanel.GetChild(i).gameObject);
+            Destroy(musicNotationContainer.GetChild(i).gameObject);
 
         }
 
@@ -436,26 +359,16 @@ public class GeneralUIManager : MonoBehaviour {
         currentSelectedLevelButtonTransform = null;
         gameUIManager.SetLevelSO(currentLevelSO);
 
-        MoveObjectOffScreen(currentSelectedLevelType == LevelType.Tutorial ? tutorialsButton : practiceButton, "horizontal", false);
-        MoveObjectOffScreen(difficultyButtons[currentSelectedDifficulty], "horizontal", false);
-        MoveObjectOffScreen(levelButtons, "vertical", false);
-        if(levelPreviewPanel == leftLevelPreviewPanel) {
-
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", false);
-
-        } else {
-
-            MoveObjectOffScreen(levelPreviewPanel, "horizontal", true);
-
-        }
-        MoveObjectOffScreen(statsButton, "vertical", true);
-        StopCoroutine(backgroundScrollCoroutine);
-        MoveObjectOffScreen(background, "vertical", false, movingTime: 1, callback: () => {
+        MoveObjectOffScreen(currentSelectedLevelType == LevelType.Tutorial ? learnButton : practiceButton, "vertical", true, movingTime: 0.5f);
+        MoveObjectOffScreen(difficultyButtons[currentSelectedDifficulty], "vertical", true, movingTime: 0.5f);
+        MoveObjectOffScreen(levelButtons, "vertical", false, movingTime: 0.5f);
+        MoveObjectOffScreen(levelPreviewPanel, "vertical", false, movingTime: 0.5f);
+        MoveObjectOffScreen(titlePanel, "vertical", true, movingTime: 0.5f, callback: () => {
 
             gameUIManager.SetupPregameScreen();
 
         });
-
+        
     }
 
     public void SettingsButtonAction() {
@@ -486,16 +399,14 @@ public class GeneralUIManager : MonoBehaviour {
 
     public void ResetupLevelSelectScreen() {
 
-        RectTransform levelTypeHeader = currentSelectedLevelType == LevelType.Tutorial ? tutorialsButton : practiceButton;
+        RectTransform levelTypeHeader = currentSelectedLevelType == LevelType.Tutorial ? learnButton : practiceButton;
         RectTransform difficultyHeader = difficultyButtons[currentSelectedDifficulty];
 
-        StartCoroutine(SlideObjectCoroutine(levelTypeHeader, levelTypeHeaderPosition2));
-        StartCoroutine(SlideObjectCoroutine(difficultyHeader, difficultyHeaderPosition));
+        StartCoroutine(SlideObjectCoroutine(titlePanel, titlePanelLevelSelectPosition));
+        StartCoroutine(SlideObjectCoroutine(levelTypeHeader, levelTypeHeaderPosition + titlePanelLevelSelectPosition, useAnchoredPosition: false));
+        StartCoroutine(SlideObjectCoroutine(difficultyHeader, difficultyHeaderPosition + titlePanelLevelSelectPosition, useAnchoredPosition: false));
         StartCoroutine(SlideObjectCoroutine(levelButtons, levelButtonsPosition));
-        StartCoroutine(SlideObjectCoroutine(statsButton, statsButtonPosition));
         LevelButtonAction(currentLevelSO.GetLevelNumber());
-        background.gameObject.SetActive(true);
-        StartCoroutine(backgroundScrollCoroutine);
 
     }
 
@@ -678,23 +589,6 @@ public class GeneralUIManager : MonoBehaviour {
 
     }
 
-    private IEnumerator MainMenuBackgroundScrollCoroutine(Transform mainMenuBackground) {
-
-        float mainMenuBackgroundHeight = mainMenuBackground.GetComponent<RectTransform>().rect.height;
-        while(shouldMainMenuBackgroundBeScrolling) {
-
-            mainMenuBackground.Translate(0, backgroundScrollSpeed * mainMenuBackgroundHeight / 100f * Time.deltaTime, 0);
-            if(mainMenuBackground.localPosition.y > mainMenuBackgroundHeight / 4f) {
-
-                mainMenuBackground.localPosition = Vector3.up * -mainMenuBackgroundHeight / 4f;
-
-            }
-            yield return null;
-
-        }
-
-    }
-
     private LevelScriptableObject GetLevelScriptableObject(bool isTutorial, int difficulty, int number) {
 
         try {
@@ -745,29 +639,14 @@ public class GeneralUIManager : MonoBehaviour {
 
     private Color GetCurrentDifficultyColor() {
 
-        Color difficultyColor = difficultyButtons[currentSelectedDifficulty].GetComponent<HoldAndReleaseButton>().GetButtonTransform().GetComponent<Image>().color;
-        Color.RGBToHSV(difficultyColor, out float hue, out float sat, out float val);
-        return Color.HSVToRGB(hue, sat - 0.45f, val);
+        return difficultyButtons[currentSelectedDifficulty].GetComponent<HoldAndReleaseButton>().GetButtonTransform().GetComponent<Image>().color;
 
     }
 
-    private void SetLevelPreviewPanelColor(RectTransform levelPreviewPanelParam, Color previewPanelColor) {
+    private Color DesaturateColor(Color color, float desaturation) {
 
-        Color.RGBToHSV(previewPanelColor, out float hue, out float sat, out float val);
-        Transform topBarShadow = levelPreviewPanelParam.Find("Top Bar Shadow");
-        Transform topBar = levelPreviewPanelParam.Find("Top Bar");
-        Transform textPanelShadow = levelPreviewPanelParam.Find("Text Panel Shadow");
-        Transform textPanel = levelPreviewPanelParam.Find("Text Panel");
-        Transform cancelAndPlayButtonsPanel = levelPreviewPanelParam.Find("Cancel & Play Buttons Panel");
-        Transform playTriangle = cancelAndPlayButtonsPanel.Find("Play Button").GetComponent<HoldAndReleaseButton>().GetButtonTransform().GetChild(0);
-        Transform cancelButton = cancelAndPlayButtonsPanel.Find("Cancel Button");
-        topBar.GetComponent<Image>().color = previewPanelColor;
-        textPanel.GetComponent<Image>().color = previewPanelColor;
-        topBarShadow.GetComponent<Image>().color = Color.HSVToRGB(hue, sat - 0.3f, val);
-        textPanelShadow.GetComponent<Image>().color = Color.HSVToRGB(hue, sat - 0.3f, val);
-        cancelAndPlayButtonsPanel.GetComponent<Image>().color = previewPanelColor;
-        playTriangle.GetComponent<Image>().color = previewPanelColor;
-        cancelButton.GetComponent<HoldAndReleaseButton>().SetColor(Color.HSVToRGB(hue, sat - 0.3f, val));
+        Color.RGBToHSV(color, out float hue, out float sat, out float val);
+        return Color.HSVToRGB(hue, sat - desaturation, val);
 
     }
 
