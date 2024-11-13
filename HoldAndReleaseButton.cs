@@ -15,7 +15,7 @@ public class HoldAndReleaseButton : MonoBehaviour, IPointerClickHandler, IPointe
     private Color originalColor;
     private bool buttonIsEnabled = true;
 
-    void Start() {
+    void Awake() {
 
         originalSize = new Vector2(buttonTransform.rect.width, buttonTransform.rect.height);
         originalPosition = buttonTransform.localPosition;
@@ -38,8 +38,6 @@ public class HoldAndReleaseButton : MonoBehaviour, IPointerClickHandler, IPointe
         if(buttonIsEnabled) {
 
             float sizeChangeFactor = shadowTransform.rect.width / buttonTransform.rect.width;
-            //buttonTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, shadowTransform.rect.width);
-            //buttonTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, buttonTransform.rect.height * sizeChangeFactor);
             buttonTransform.localScale = new Vector3(sizeChangeFactor, sizeChangeFactor, 1);
             buttonTransform.localPosition = shadowTransform.localPosition + Vector3.down * (shadowTransform.rect.height / 2f - buttonTransform.rect.height / 2f * sizeChangeFactor);
             Image image = buttonTransform.GetComponent<Image>();
@@ -139,6 +137,21 @@ public class HoldAndReleaseButton : MonoBehaviour, IPointerClickHandler, IPointe
         buttonTransform.GetComponent<Image>().color = normalColor;
         shadowTransform.GetComponent<Image>().color = shadowColor;
         this.pressedColor = pressedColor;
+
+    }
+
+    public void ShrinkButton() {
+
+        float sizeChangeFactor = shadowTransform.rect.width / buttonTransform.rect.width;
+        buttonTransform.localScale = new Vector3(sizeChangeFactor, sizeChangeFactor, 1);
+        buttonTransform.localPosition = shadowTransform.localPosition + Vector3.down * (shadowTransform.rect.height / 2f - buttonTransform.rect.height / 2f * sizeChangeFactor);
+
+    }
+
+    public void ExpandButton() {
+
+        buttonTransform.localScale = Vector3.one;
+        buttonTransform.localPosition = originalPosition;
 
     }
 

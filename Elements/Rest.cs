@@ -8,12 +8,6 @@ public class Rest : Element {
 
     }
 
-    public override string ToString() {
-        
-        return $"Rest {beats}";
-
-    }
-
     public override bool Equals(object obj) {
         
         if(obj == null) {
@@ -44,6 +38,12 @@ public class Rest : Element {
     public override int GetHashCode() {
 
         return beats.GetHashCode();
+
+    }
+
+    public override string ToString() {
+
+        return $"Rest {beats}";
 
     }
 

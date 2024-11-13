@@ -82,14 +82,22 @@ public class Note : Element {
     /// <returns>True if the elements are 1. Notes; and 2. Are of the same pitch</returns>
     public static bool IsTie(Element firstElement, Element secondElement) {
 
-        if(firstElement is not Note || secondElement is not Note) {
+        if(firstElement is Rest || secondElement is Rest) {
+
+            return false;
+
+        } else if (firstElement is Tuplet firstTuplet && firstTuplet[^1] is not Note) {
+
+            return false;
+
+        } else if(secondElement is Tuplet secondTuplet && secondTuplet[0] is not Note) {
 
             return false;
 
         }
 
-        Note firstNote = (Note) firstElement;
-        Note secondNote = (Note) secondElement;
+        Note firstNote = (Note) (firstElement is Tuplet ? (firstElement as Tuplet)[^1] : firstElement);
+        Note secondNote = (Note) (secondElement is Tuplet ? (secondElement as Tuplet)[0] : secondElement);
 
         if(firstNote.IsTied() && firstNote.Equals(secondNote) && !secondNote.IsTied()) {
 
@@ -100,12 +108,6 @@ public class Note : Element {
             return false;
 
         }
-
-    }
-
-    public override string ToString() {
-
-        return $"{pitch}{GetAccidentalAsString(accidental)}{octave}";
 
     }
 
@@ -139,6 +141,12 @@ public class Note : Element {
     public override int GetHashCode() {
 
         return 17*(pitch.GetHashCode() + accidental.GetHashCode() + octave.GetHashCode());
+
+    }
+
+    public override string ToString() {
+
+        return $"{pitch}{GetAccidentalAsString(accidental)}{octave}";
 
     }
 

@@ -26,7 +26,7 @@ public class Tuplet : Element, IElementGroup {
         if(timeSignature[1] == 8 && timeSignature[0] % 3 == 0 && numDivisions % 2 == 0) {
 
             //In the case of a even-numbered tuplet in a compound time signature:
-            tupletToRealBeatsScale = 3 / numDivisions;
+            tupletToRealBeatsScale = 3f / numDivisions;
 
         } else {
 
@@ -61,15 +61,33 @@ public class Tuplet : Element, IElementGroup {
 
     public float GetRealBeatsForElement(int elementIndex) {
 
-        UnityEngine.Debug.Log($"{numDivisions}-Tuplet, tuplet length of {elements[elementIndex].GetBeats()}, real length of {elements[elementIndex].GetBeats() * tupletToRealBeatsScale}");
-
         return elements[elementIndex].GetBeats() * tupletToRealBeatsScale;
+
+    }
+
+    public float GetRealElementDuration(int elementIndex, float tempo) {
+
+        return elements[elementIndex].GetBeats() * tupletToRealBeatsScale * 60 / tempo;
 
     }
 
     public int GetNumDivisions() {
 
         return numDivisions;
+
+    }
+
+    public override string ToString() {
+
+        return numDivisions switch {
+
+            2 => "Duplet",
+            3 => "Triplet",
+            4 => "Quadruplet",
+            5 => "Quintuplet",
+            _ => $"{numDivisions}-tuplet"
+
+        };
 
     }
 

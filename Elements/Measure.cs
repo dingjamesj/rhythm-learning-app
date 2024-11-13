@@ -143,6 +143,23 @@ public class Measure : IElementGroup {
 
     }
 
+    public static List<Element> MeasureArrayAsList(Measure[] measures) {
+
+        List<Element> list = new List<Element>();
+        for(int m = 0; m < measures.Length; m++) {
+
+            for(int i = 0; i < measures[m].Count; i++) {
+
+                list.Add(measures[m][i]);
+
+            }
+
+        }
+
+        return list;
+
+    }
+
     /// <summary>
     /// <u><b>Text input must be formatted in the following way:</b></u><br></br>
     /// 

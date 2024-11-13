@@ -29,6 +29,7 @@ public class GeneralUIManager : MonoBehaviour {
     [SerializeField] private Vector3 difficultyHeaderPosition = new(0, -375, 0);
     [SerializeField] private Vector3 statsButtonPosition = new(-175, 154, 0);
     [SerializeField] private Vector3 settingsButtonPosition = new(175, 165, 0);
+    [SerializeField] private float mainMenuButtonAnimationPeriod = 1;
 
     [Space]
     [Space]
@@ -61,6 +62,7 @@ public class GeneralUIManager : MonoBehaviour {
     private int currentSelectedDifficulty = -1;
     private RectTransform currentSelectedLevelButtonTransform = null;
     private LevelScriptableObject currentLevelSO;
+    private IEnumerator mainMenuButtonCoroutine;
 
     void Start() {
 
@@ -78,6 +80,9 @@ public class GeneralUIManager : MonoBehaviour {
 
         MoveObjectOffScreen(settingsPanel, "horizontal", false, movingTime: 0); //Set the settings panel right off of the screen
 
+        mainMenuButtonCoroutine = MainMenuButtonCoroutine();
+        StartCoroutine(mainMenuButtonCoroutine);
+
     }
 
     /// <summary>
@@ -85,6 +90,11 @@ public class GeneralUIManager : MonoBehaviour {
     /// </summary>
     /// <param name="buttonTransform"></param>
     public void LevelTypeButtonAction(RectTransform buttonTransform) {
+
+        //Stop the learn and practice buttons from going up and down
+        StopCoroutine(mainMenuButtonCoroutine);
+        learnButton.GetComponent<HoldAndReleaseButton>().ExpandButton();
+        practiceButton.GetComponent<HoldAndReleaseButton>().ExpandButton();
 
         MoveObjectOffScreen(titleTextTransform, "vertical", true);
         MoveObjectOffScreen(settingsButton, "vertical", false);
@@ -122,12 +132,6 @@ public class GeneralUIManager : MonoBehaviour {
             StartCoroutine(SlideObjectCoroutine(difficultyButtons[i], difficultyButtonPositions[i]));
 
         }
-        /*
-        //Set the level preview panel color (the level preview panel's color is dependent on the level type header color)
-        Color previewPanelColor = currentSelectedLevelType == LevelType.Tutorial ? tutorialsLevelPreviewColor : practiceLevelPreviewColor;
-        SetLevelPreviewPanelColor(leftLevelPreviewPanel, previewPanelColor);
-        SetLevelPreviewPanelColor(rightLevelPreviewPanel, previewPanelColor);
-        */
 
     }
 
@@ -246,7 +250,7 @@ public class GeneralUIManager : MonoBehaviour {
 
         //Hide all unavailable levels and set the color.
         Color normalColor = GetCurrentDifficultyColor();
-        Color levelButtonColor = DesaturateColor(normalColor, 0.3f);
+        Color levelButtonColor = DesaturateColor(normalColor, 0.45f);
         for(int i = 0; i < levelButtons.childCount; i++) {
 
             Transform levelButtonTransform = levelButtons.GetChild(i);
@@ -254,7 +258,7 @@ public class GeneralUIManager : MonoBehaviour {
             if(i < numLevelsAvailable) {
 
                 levelButtonTransform.gameObject.SetActive(true);
-                levelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(levelButtonColor);
+                levelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(levelButtonColor, 0.25f);
 
             } else {
 
@@ -265,9 +269,9 @@ public class GeneralUIManager : MonoBehaviour {
         }
 
         //Set the color of the level preview panel.
-        Color desaturatedColor = DesaturateColor(normalColor, 0.15f);
+        Color desaturatedColor = DesaturateColor(normalColor, 0.3f);
         levelPreviewPanel.GetComponent<Image>().color = normalColor;
-        levelPreviewBottomPanel.GetComponent<Image>().color = levelButtonColor;
+        levelPreviewBottomPanel.GetComponent<Image>().color = desaturatedColor;
         levelPreviewBottomPanel.Find("Bar").GetComponent<Image>().color = normalColor;
 
         //Slide the level buttons into the UI.
@@ -335,13 +339,13 @@ public class GeneralUIManager : MonoBehaviour {
             DestroyImmediate(musicNotationContainer.GetChild(0).gameObject);
 
         }
-        sheetMusicUIManager.CreateFullMusicNotationUI(Measure.ReadTextInput(currentLevelSO.GetLevelContents()), (RectTransform) musicNotationContainer, size: 1f, musicNotationBoundsInset: 10);
+        sheetMusicUIManager.CreateFullMusicNotationUI(Measure.ReadTextInput(currentLevelSO.GetLevelContents()), (RectTransform) musicNotationContainer, size: 1f);
 
     }
 
     public void LevelPreviewBackButtonAction() {
 
-        currentSelectedLevelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(DesaturateColor(GetCurrentDifficultyColor(), 0.3f)); //De-highlighting the button
+        currentSelectedLevelButtonTransform.GetComponent<HoldAndReleaseButton>().SetColor(DesaturateColor(GetCurrentDifficultyColor(), 0.45f), 0.25f); //De-highlighting the button
         currentSelectedLevelButtonTransform = null;
         MoveObjectOffScreen(levelPreviewPanel, "vertical", false);
 
@@ -586,6 +590,34 @@ public class GeneralUIManager : MonoBehaviour {
         transform.localEulerAngles = finalRotation;
 
         callback?.Invoke();
+
+    }
+
+    public IEnumerator MainMenuButtonCoroutine() {
+
+        bool buttonsAreShrunk = true;
+        HoldAndReleaseButton learnButtonComponent = learnButton.GetComponent<HoldAndReleaseButton>();
+        HoldAndReleaseButton practiceButtonComponent = practiceButton.GetComponent<HoldAndReleaseButton>();
+
+        while(true) {
+
+            if(buttonsAreShrunk) {
+
+                learnButtonComponent.ExpandButton();
+                practiceButtonComponent.ExpandButton();
+
+            } else {
+
+                learnButtonComponent.ShrinkButton();
+                practiceButtonComponent.ShrinkButton();
+
+            }
+
+            buttonsAreShrunk = !buttonsAreShrunk;
+
+            yield return new WaitForSeconds(mainMenuButtonAnimationPeriod);
+
+        }
 
     }
 
