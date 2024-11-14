@@ -939,12 +939,12 @@ public class GameUIManager : MonoBehaviour {
         float rowWidth = nodeRadius;
         //The following variable "nodeSeparation" will temporarily store the separation between one node and the next.
         //This is to address the problem encountered with rests and ties--or in other words--elements that are silent and won't have nodes.
-        float nodeSeparation = 0; 
+        float nodeSeparation = 0; //This is kind of like "cached" node separation. When we look at a rest, instead of officially adding its corresponding node separation to rowWidth, we add it here.
         bool skipThisNote = false; //A boolean flag to also address the above problem (specifically for tied notes)
 
         //Loop through each element, and if it's a note, then calculate the node separation for the next node
         List<float> rowWidths = new ();
-        bool newRowAdded = false;
+        bool newRowAdded;
         for(int e = 0; e <= lastAudibleElementIndex[0]; e++) {
 
             newRowAdded = false;
@@ -954,7 +954,6 @@ public class GameUIManager : MonoBehaviour {
                 //Skip this element if it's a rest or if it's at the receiving end of a tie
 
                 //Note that node separation is "accumulated" (i.e. we use += instead of =). This is because when a node isn't placed, we will let the node separation add up.
-                rowWidth += elements[e].GetBeats() * nodeSeparationPerBeat;
                 nodeSeparation += elements[e].GetBeats() * nodeSeparationPerBeat;
                 skipThisNote = false; //Remember to reset the noteIsSilent flag
 
@@ -966,14 +965,15 @@ public class GameUIManager : MonoBehaviour {
                 print($"{e} noteseparation, row length: {nodeSeparation}, {rowWidth}");
 
                 //Check if this node should be on a new row.
-                if(rowWidth + nodeRadius > containerWidth + 0.001f /*for floating-point inaccuracy*/) {
+                if(rowWidth + nodeSeparation + nodeRadius > containerWidth + 0.001f /*for floating-point inaccuracy*/) {
 
                     print($"{e} new row created");
 
-                    rowWidths.Add(rowWidth - nodeSeparation + nodeRadius); //Add node radius because the row ends with a node, and the connector beam ends at the center of the node
+                    rowWidths.Add(rowWidth + nodeRadius); //Add node radius because the row ends with a node, and the connector beam ends at the center of the node
                     newRowAdded = true;
 
-                    //When starting a new row, there will NOT be a node at the start, and we will subtract the node radius because the last node's. Therefore we will not be adding nodeRadius
+                    //When starting a new row, there will NOT be a node at the start.
+                    //Furthermore, we need to subtract the node radius since the previous node (on the previous row) already covered this node's left radius.
                     rowWidth = -nodeRadius;
 
                 } else {
@@ -982,7 +982,7 @@ public class GameUIManager : MonoBehaviour {
 
                 }
 
-                rowWidth += nodeSeparation; //Do not add nodeRadius to the rowWidth variable (we only account for adding nodeRadius when we're thinking about ending a row)
+                rowWidth += nodeSeparation; //Don't add nodeRadius to rowWidth (we only add nodeRadius when we're going to end a row)
                 nodeSeparation = elements[e].GetBeats() * nodeSeparationPerBeat;
 
                 //Skip the next element if this current note is the beginning of a tie
@@ -995,7 +995,7 @@ public class GameUIManager : MonoBehaviour {
 
             } else if(elements[e] is Tuplet tuplet) {
 
-                int tupletIndexLimit;
+                int tupletIndexLimit; //Remember that if the tuplet is in the middle of the music, then we go completely through it.
                 if(e == lastAudibleElementIndex[0]) {
 
                     tupletIndexLimit = lastAudibleElementIndex[1];
@@ -1017,7 +1017,6 @@ public class GameUIManager : MonoBehaviour {
                         print($"{e} {t} skipped/rest");
 
                         //Note that node separation is "accumulated" (i.e. we use += instead of =). This is because when a node isn't placed, we will let the node separation add up.
-                        rowWidth += tuplet.GetRealBeatsForElement(t) * nodeSeparationPerBeat;
                         nodeSeparation += tuplet.GetRealBeatsForElement(t) * nodeSeparationPerBeat;
                         skipThisNote = false; //Remember to reset the noteIsSilent flag
 
@@ -1026,14 +1025,15 @@ public class GameUIManager : MonoBehaviour {
                         print($"{e} noteseparation, row length: {nodeSeparation}, {rowWidth}");
 
                         //Check if this node should be on a new row.
-                        if(rowWidth + nodeRadius > containerWidth + 0.001f /*for floating-point inaccuracy*/ || (e == lastAudibleElementIndex[0] && t == tupletIndexLimit)) {
+                        if(rowWidth + nodeSeparation + nodeRadius > containerWidth + 0.001f /*for floating-point inaccuracy*/ || (e == lastAudibleElementIndex[0] && t == tupletIndexLimit)) {
 
                             print($"{e} new row created");
 
-                            rowWidths.Add(rowWidth - nodeSeparation + nodeRadius); //Add node radius because the row ends with a node, and the connector beam ends at the center of the node
+                            rowWidths.Add(rowWidth + nodeRadius); //Add node radius because the row ends with a node, and the connector beam ends at the center of the node
                             newRowAdded = true;
 
-                            //When starting a new row, there will NOT be a node at the start, and we will subtract the node radius because the last node's. Therefore we will not be adding nodeRadius
+                            //When starting a new row, there will NOT be a node at the start.
+                            //Furthermore, we need to subtract the node radius since the previous node (on the previous row) already covered this node's left radius.
                             rowWidth = -nodeRadius;
 
                         } else {
@@ -1042,7 +1042,8 @@ public class GameUIManager : MonoBehaviour {
 
                         }
 
-                        rowWidth += nodeSeparation; //Do not add nodeRadius to the rowWidth variable (we only account for adding nodeRadius when we're thinking about ending a row)
+                        //Don't add nodeRadius to rowWidth (we only add nodeRadius when we're going to end a row)
+                        rowWidth += nodeSeparation; 
                         nodeSeparation = tuplet.GetRealBeatsForElement(t) * nodeSeparationPerBeat;
 
                         //Skip the next element if this current note is the beginning of a tie
