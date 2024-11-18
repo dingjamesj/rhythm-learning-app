@@ -944,12 +944,9 @@ public class GameUIManager : MonoBehaviour {
 
         //Loop through each element, and if it's a note, then calculate the node separation for the next node
         List<float> rowWidths = new ();
-        bool newRowAdded;
         for(int e = 0; e <= lastAudibleElementIndex[0]; e++) {
 
-            newRowAdded = false;
-
-            if(skipThisNote || elements[e] is Rest) {
+            if((elements[e] is not Tuplet && skipThisNote) || elements[e] is Rest) {
 
                 //Skip this element if it's a rest or if it's at the receiving end of a tie
 
@@ -970,7 +967,6 @@ public class GameUIManager : MonoBehaviour {
                     print($"{e} new row created");
 
                     rowWidths.Add(rowWidth + nodeRadius); //Add node radius because the row ends with a node, and the connector beam ends at the center of the node
-                    newRowAdded = true;
 
                     //When starting a new row, there will NOT be a node at the start.
                     //Furthermore, we need to subtract the node radius since the previous node (on the previous row) already covered this node's left radius.
@@ -1002,7 +998,7 @@ public class GameUIManager : MonoBehaviour {
 
                 } else {
 
-                    tupletIndexLimit = tuplet.Count;
+                    tupletIndexLimit = tuplet.Count - 1;
 
                 }
 
@@ -1022,15 +1018,14 @@ public class GameUIManager : MonoBehaviour {
 
                     } else if(tuplet[t] is Note) {
 
-                        print($"{e} noteseparation, row length: {nodeSeparation}, {rowWidth}");
+                        print($"{e} {t} noteseparation, row length: {nodeSeparation}, {rowWidth}");
 
                         //Check if this node should be on a new row.
                         if(rowWidth + nodeSeparation + nodeRadius > containerWidth + 0.001f /*for floating-point inaccuracy*/ || (e == lastAudibleElementIndex[0] && t == tupletIndexLimit)) {
 
-                            print($"{e} new row created");
+                            print($"{e} {t} new row created");
 
                             rowWidths.Add(rowWidth + nodeRadius); //Add node radius because the row ends with a node, and the connector beam ends at the center of the node
-                            newRowAdded = true;
 
                             //When starting a new row, there will NOT be a node at the start.
                             //Furthermore, we need to subtract the node radius since the previous node (on the previous row) already covered this node's left radius.
@@ -1038,7 +1033,7 @@ public class GameUIManager : MonoBehaviour {
 
                         } else {
 
-                            print($"{e} same");
+                            print($"{e} {t} same");
 
                         }
 
@@ -1062,7 +1057,8 @@ public class GameUIManager : MonoBehaviour {
 
             } else throw new ArgumentException($"CalculateWidthsOfGuideRows-- {elements[e].GetType().Name} is not supported");
 
-            if(!newRowAdded && e == lastAudibleElementIndex[0]) {
+            //The row that the last element is on will always need to be manually added.
+            if(e == lastAudibleElementIndex[0]) {
 
                 rowWidths.Add(rowWidth + nodeRadius);
 
