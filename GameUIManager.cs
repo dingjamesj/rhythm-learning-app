@@ -789,7 +789,7 @@ public class GameUIManager : MonoBehaviour {
                 //If this node is currently outside of the container panel, then move it to a new row
 
                 //Connect the old row
-                ConnectNodesInRow(parent, numRowsCompleted + 1, beginXPosition, parent.GetChild(newNode.GetSiblingIndex() - 1).localPosition.x, minGuideRowWidths[numRowsCompleted] * currNodeSeparationPerBeat / minNodeSeparationPerBeat, yPosition, nodeRadius);
+                ConnectNodesInRow(parent, numRowsCompleted + 1, beginXPosition, minGuideRowWidths[numRowsCompleted] * currNodeSeparationPerBeat / minNodeSeparationPerBeat, yPosition, nodeRadius);
                 numRowsCompleted++;
 
                 //Lastly, update the x and y position values for the new row
