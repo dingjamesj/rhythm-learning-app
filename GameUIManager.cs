@@ -875,7 +875,7 @@ public class GameUIManager : MonoBehaviour {
         //If a connector beam still needs to be made, make it.
         if(numRowsCompleted < numRows) {
 
-            ConnectNodesInRow(parent, numRowsCompleted + 1, beginXPosition, parent.GetChild(parent.childCount - 1).localPosition.x, minGuideRowWidths[numRowsCompleted] * currNodeSeparationPerBeat / minNodeSeparationPerBeat, yPosition, nodeRadius);
+            ConnectNodesInRow(parent, numRowsCompleted + 1, beginXPosition, minGuideRowWidths[numRowsCompleted] * currNodeSeparationPerBeat / minNodeSeparationPerBeat, yPosition, nodeRadius);
 
         }
 
@@ -883,7 +883,7 @@ public class GameUIManager : MonoBehaviour {
 
     }
 
-    private void ConnectNodesInRow(RectTransform nodesContainer, int rowNumber, float beginXPosition, float endXPosition, float rowWidth, float yPosition, float nodeRadius) {
+    private void ConnectNodesInRow(RectTransform nodesContainer, int rowNumber, float beginXPosition, float rowWidth, float yPosition, float nodeRadius) {
 
         print("CONNECTNODEINROW");
 
@@ -891,7 +891,7 @@ public class GameUIManager : MonoBehaviour {
         RectTransform newConnector = Instantiate(connector, nodesContainer).GetComponent<RectTransform>();
         newConnector.name = "Connector Beam";
         newConnector.SetAsFirstSibling();
-        newConnector.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, endXPosition - beginXPosition);
+        newConnector.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, rowWidth - nodeRadius);
         newConnector.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, connectorBeamHeightAsFractionOfNodeDiameter * nodeRadius * 2);
         newConnector.localPosition = new Vector3(beginXPosition + newConnector.rect.width / 2f, yPosition, 0);
         newConnector.GetComponent<Image>().color = unreachedGuideColor;
