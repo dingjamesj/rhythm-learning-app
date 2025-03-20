@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using TMPro;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -1289,11 +1290,11 @@ public class GameUIManager : MonoBehaviour {
             for(int i = 0; i < row.childCount; i++) {
 
                 Transform child = row.GetChild(i);
-                if(child.name == "Connector Beam") {
+                if(i == 0) {
 
                     child.GetComponent<Image>().material = guideMaterial;
 
-                } else if(child.name == "Node") {
+                } else {
 
                     child.GetChild(1).GetComponent<Image>().material = guideMaterial;
 
@@ -1307,12 +1308,12 @@ public class GameUIManager : MonoBehaviour {
             for(int i = 0; i < row.childCount; i++) {
 
                 Transform child = row.GetChild(i);
-                if(child.name == "Connector Beam") {
+                if(i == 0) {
 
                     child.GetComponent<Image>().material = null;
                     child.GetComponent<Image>().color = reachedGuideColor;
 
-                } else if(child.name == "Node") {
+                } else {
 
                     child.GetChild(1).GetComponent<Image>().material = null;
                     child.GetChild(1).GetComponent<Image>().color = reachedGuideColor;
@@ -1342,8 +1343,9 @@ public class GameUIManager : MonoBehaviour {
             ApplyGuideMaterialToRow(guideRow, guideMaterial);
 
             //Note: these are in coords relative to the UI canvas (the shader's color border property controls the position of the border in reference to the canvas for some reason).
-            float guideRowPositionRelativeToCanvas = guideRow.localPosition.x + guideRow.parent.localPosition.x + guideRow.parent.parent.localPosition.x;
-            float rowLeftEndXPosition = guideRowPositionRelativeToCanvas - guideRow.rect.width / 2;
+            float guideRowPositionRelativeToCanvas = guideRow.localPosition.x + guideRow.parent.localPosition.x + guideRow.parent.parent.localPosition.x + guideRow.parent.parent.parent.localPosition.x;
+            float rowLeftEndXPosition = - guideRow.rect.width / 2;
+            print(guideRow.localPosition.x);
             float rowRightEndXPosition = guideRowPositionRelativeToCanvas + guideRow.rect.width / 2;
 
             int nodeIndex = 1; //Note that the next node index starts at 1, not 0. This is because child #0 of guideRow is the connector beam, and the first NODE of guideRow is child #1
@@ -1386,7 +1388,8 @@ public class GameUIManager : MonoBehaviour {
 
                 }
 
-                colorBorderPosition = new Vector3(colorBorderXPosition - guideRowPositionRelativeToCanvas, guideRow.localPosition.y, 0);
+                print($"{colorBorderXPosition} {colorBorderXPosition + guideRow.localPosition.x}");
+                colorBorderPosition = new Vector3(colorBorderXPosition, guideRow.localPosition.y, 0);
 
                 yield return null;
 
@@ -1448,6 +1451,7 @@ public class GameUIManager : MonoBehaviour {
         noteHasBeenTapped = false;
 
         //Clear the guide.
+        print("rest");
         ClearGuide();
 
         //Reset the beat counters.
@@ -1468,18 +1472,18 @@ public class GameUIManager : MonoBehaviour {
         //Reset the node guides.
         foreach(Transform nodeRow in nodesContainer) {
 
-            foreach(Transform child in nodeRow) {
+            for(int i = 0; i < nodeRow.childCount; i++) {
 
-                if(child.name == "Connector Beam") {
+                if(i == 0) {
 
-                    child.GetComponent<Image>().material = null;
-                    child.GetComponent<Image>().color = unreachedGuideColor;
+                    nodeRow.GetChild(i).GetComponent<Image>().material = null;
+                    nodeRow.GetChild(i).GetComponent<Image>().color = unreachedGuideColor;
 
-                } else if(child.name == "Node") {
+                } else {
 
-                    child.GetChild(0).GetComponent<Image>().color = Color.white;
-                    child.GetChild(1).GetComponent<Image>().material = null;
-                    child.GetChild(1).GetComponent<Image>().color = unreachedGuideColor;
+                    nodeRow.GetChild(i).GetChild(0).GetComponent<Image>().color = Color.white;
+                    nodeRow.GetChild(i).GetChild(1).GetComponent<Image>().material = null;
+                    nodeRow.GetChild(i).GetChild(1).GetComponent<Image>().color = unreachedGuideColor;
 
                 }
 
