@@ -1343,8 +1343,9 @@ public class GameUIManager : MonoBehaviour {
             ApplyGuideMaterialToRow(guideRow, guideMaterial);
 
             //Note: these are in coords relative to the UI canvas (the shader's color border property controls the position of the border in reference to the canvas for some reason).
-            float guideRowPositionRelativeToCanvas = guideRow.localPosition.x + guideRow.parent.localPosition.x + guideRow.parent.parent.localPosition.x;
-            float rowLeftEndXPosition = guideRowPositionRelativeToCanvas - guideRow.rect.width / 2;
+            float guideRowPositionRelativeToCanvas = guideRow.localPosition.x + guideRow.parent.localPosition.x + guideRow.parent.parent.localPosition.x + guideRow.parent.parent.parent.localPosition.x;
+            float rowLeftEndXPosition = - guideRow.rect.width / 2;
+            print(guideRow.localPosition.x);
             float rowRightEndXPosition = guideRowPositionRelativeToCanvas + guideRow.rect.width / 2;
 
             int nodeIndex = 1; //Note that the next node index starts at 1, not 0. This is because child #0 of guideRow is the connector beam, and the first NODE of guideRow is child #1
@@ -1387,7 +1388,8 @@ public class GameUIManager : MonoBehaviour {
 
                 }
 
-                colorBorderPosition = new Vector3(colorBorderXPosition - guideRowPositionRelativeToCanvas, guideRow.localPosition.y, 0);
+                print($"{colorBorderXPosition} {colorBorderXPosition + guideRow.localPosition.x}");
+                colorBorderPosition = new Vector3(colorBorderXPosition, guideRow.localPosition.y, 0);
 
                 yield return null;
 
